@@ -1,4 +1,4 @@
-import { Client, Events, GatewayIntentBits, SlashCommandBuilder, Permissions } from 'discord.js';
+import { Client, Events, GatewayIntentBits, SlashCommandBuilder, PermissionsBitField } from 'discord.js';
 import { config } from '../config';
 import { handleAskCommand, handleDirectMessage } from './commands';
 
@@ -23,7 +23,8 @@ export async function setupBot() {
         .setName('question')
         .setDescription('Your question about NS')
         .setRequired(true)
-    );
+    )
+    .setDefaultMemberPermissions(PermissionsBitField.Flags.SendMessages);
 
   client.on(Events.ClientReady, async () => {
     console.log(`Discord bot logged in as ${client.user?.tag}`);
@@ -38,7 +39,7 @@ export async function setupBot() {
         console.log(`Bot permissions in ${guild.name}:`, member.permissions.toArray());
 
         // Register the command
-        await guild.commands.set([askCommand]);
+        await guild.commands.set([askCommand.toJSON()]);
         console.log(`Successfully registered commands for ${guild.name}`);
       } catch (error) {
         console.error(`Failed to register commands for ${guild.name}:`, error);
@@ -49,9 +50,13 @@ export async function setupBot() {
   // Handle slash commands
   client.on(Events.InteractionCreate, async (interaction) => {
     console.log('Received interaction:', interaction.type, interaction.commandName);
-    if (!interaction.isChatInputCommand()) return;
+    if (!interaction.isChatInputCommand()) {
+      console.log('Not a chat input command');
+      return;
+    }
 
     if (interaction.commandName === 'ask') {
+      console.log('Processing /ask command');
       await handleAskCommand(interaction);
     }
   });
