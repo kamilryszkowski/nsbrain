@@ -63,7 +63,6 @@ async function generateResponse(query) {
           content: query
         }
       ],
-      max_tokens: config.openai.maxTokens,
     });
 
     return response.choices[0].message.content;
@@ -131,10 +130,25 @@ async function setupBot() {
 
   // Handle direct messages
   client.on(Events.MessageCreate, async (message) => {
-    // Ignore messages from bots or non-DM channels
-    if (message.author.bot || message.channel.type !== 'DM') return;
+    // Debug all incoming messages
+    console.log(`Message received: ${message.content} | Channel type: ${message.channel.type} | Author: ${message.author.tag} | Bot: ${message.author.bot}`);
     
-    console.log(`Received DM from ${message.author.tag}: ${message.content}`);
+    // Ignore messages from bots or non-DM channels
+    if (message.author.bot) {
+      console.log('Ignoring message from bot');
+      return;
+    }
+    
+    // Check channel type with more detailed logging
+    console.log(`Channel type: ${message.channel.type} (${typeof message.channel.type})`);
+    
+    // In Discord.js v14, DM channel type is ChannelType.DM which is 1
+    if (message.channel.type !== 1) {
+      console.log(`Ignoring message in non-DM channel type: ${message.channel.type}`);
+      return;
+    }
+    
+    console.log(`Processing DM from ${message.author.tag}: ${message.content}`);
     
     // Show typing indicator
     message.channel.sendTyping();
@@ -142,6 +156,7 @@ async function setupBot() {
     try {
       const response = await generateResponse(message.content);
       await message.reply(response);
+      console.log(`Successfully replied to DM from ${message.author.tag}`);
     } catch (error) {
       console.error('Error processing DM:', error);
       await message.reply('Sorry, I could not process your request. Please try again later.');
