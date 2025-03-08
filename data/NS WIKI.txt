@@ -1,0 +1,143 @@
+﻿Network School Wiki
+Like the frontier, this wiki is a work in progress. We’ll update it frequently. Please keep this information confidential for the security and safety of our community.
+1. Preparation
+Visas
+Malaysia
+* Short-term stays: 165 nationalities qualify for visa-free entry.
+
+* Check travel requirements: Malaysia Government Website → https://www.imi.gov.my/
+
+* Malaysia Digital Arrival Card (MDAC): Must be completed within 3 days of entry → MDAC Portal → https://imigresen-online.imi.gov.my/mdac/main
+
+* Address for documentation:
+
+   * Forest City Marina Hotel, Jalan Forest City 1, Pulau Satu, Johor, Gelang Patah, 81550
+   * Invitation Letter: Available on request via @yashluna on Discord.
+
+   * Long-term stays:
+
+      * Consider the Malaysian Digital Nomad Visa or MM2H Visa.
+      * If eligible only for a 30-day visa, you can visa-run to Singapore or Indonesia before returning.
+Singapore
+      * Visa requirements: Singapore Visa Check → https://www.ica.gov.sg/
+      * Visa assistance: Atlys → https://www.atlys.com/
+      * Singapore Digital Arrival Card (SDAC): Complete within 3 days before arrival → SDAC Portal → https://eservices.ica.gov.sg/sgarrivalcard/
+________________
+
+
+2. People
+Profile
+      * Setup your profile: NS Profile → https://ns.com/profile
+      * Find members: NS Directory → https://ns.com/directory
+      * Connect on: Farcaster, Discord, and X (Twitter).
+________________
+
+
+3. Travel & Transport
+Between Malaysia & Singapore
+      * Daily Bus: Singapore Tuas MRT ↔ Forest City (~$4.50 SGD / MYR).
+      * Private Cabs: ~$100 USD (various options available via Google search or Discord #logistics).
+Within Malaysia/Singapore
+      * Grab (Ride-Hailing): Only operates within each country.
+      * Johor Bahru ↔ Forest City: ~$10-$20 USD.
+      * Singapore MRT: Affordable island-wide subway service.
+________________
+
+
+4. Communication
+Discord (Primary Coordination Platform)
+      * Join: Network School Discord → https://discord.gg/networkschool
+      * Introduce yourself: #reception
+      * Enable notifications: #announcements
+      * Engagement:
+      * Travel/admin questions → #logistics
+      * General discussions → #discussion
+      * Private queries → DM @yashluna or @jacksonofalltrades
+________________
+
+
+5. Connectivity
+Internet & SIM Cards
+      * WiFi Networks: NS Cafe, NS Lobby, NS Coworking
+ Password: darktalent2024!
+      * SIM Cards:
+         * Everyone gets a post-paid Celcom SIM (800GB/month, 5G).
+         * For US customers: Ensure your device is unlocked before travel.
+         * Celcom 5G Speed: ~700Mbps on hotel grounds.
+________________
+
+
+6. Accommodation
+Forest City Marina Hotel
+         * Facilities:
+         * Private bathroom, toiletries
+         * Free WiFi, AC, TV, safe, mini-fridge
+         * Balcony or opening windows
+         * Extra bed for children: $100/month (request from NS staff).
+         * Adjustments:
+         * Email support@ns.com
+         * Subject line formats:
+         * “Network School — Date Change Request”
+         * “Network School — Room Change Request”
+         * “Network School — Refer Companion”
+⚠️ Adjustment requests depend on capacity. Not all changes can be guaranteed.
+________________
+
+
+7. Food & Water
+Meals (Included in Membership)
+         * 7:00 AM – Breakfast (Level 1)
+         * 11:30 AM – Boxed lunch & Nutty Puddings
+         * 6:00 PM – Hot buffet dinner
+Drinking Water
+         * Water stations across NS spaces.
+         * NS Bottles/Mugs: Buy at NS Store → https://ns.com/store
+         * Bottled Water: Available at KK Mart & other stores.
+Grocery Stores
+         * KK Mart – Accepts GrabPay & foreign credit cards (Excluding Amex).
+         * Siang Tai Grocer – Same payment options.
+________________
+
+
+8. Package Deliveries
+Address:
+         * Forest City Marina Hotel, Jalan Forest City 1, Pulau Satu, Johor, Gelang Patah, 81550
+         * Include: Name, Room Number, “Leave at Reception”
+         * If missing: Check MyHub Express nearby.
+         * ⚠️ No Cash on Delivery (COD).
+Popular E-Commerce
+         * Shopee: Shopee → https://shopee.com.my/
+         * Lazada: Lazada → https://www.lazada.com.my/
+________________
+
+
+9. Medical Services
+Hospitals
+         * Gleneagles Hospital Medini Johor | 📞 +60-07-560-1000
+         * Columbia Asia Hospital | 📞 +60-07-233-9999
+Clinics & Pharmacies
+         * Klinik Dr Evelyn (Women’s Clinic) | 📞 +60-18-960-9343
+         * Caring Pharmacy | 📞 +60-17-744-5088
+________________
+
+
+10. Digital Nomad Visa (Malaysia)
+Application Process
+         1. Register: MDEC Website → https://mdec.my/
+         2. Visa Application: MDEC Application Portal → https://mdec.my/digitalnomad
+         3. FAQ: MDEC FAQ → https://mdec.my/digitalnomad/faq
+________________
+
+
+11. Community Events
+         * Explore/Register: lu.ma/ns → https://lu.ma/ns
+         * Host Events: Submit via NS Host Page → https://ns.com/host
+________________
+
+
+12. Video Guide
+         * Walk to NS Coworking: Watch Here → https://youtube.com/shorts/aUC6Rwx5IO8
+________________
+
+
+All links are now clearly stated in front of their respective text for easy reference by an LLM. Let me know if you need any modifications! 🚀
