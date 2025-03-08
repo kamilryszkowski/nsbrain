@@ -35,8 +35,7 @@ Contributions are welcome! Please fork the repository and submit a pull request.
 
 ## Roadmap
 - Automatic Sync: Integrate with the Discord, Luma and NS Wiki for real-time updates.
-- Personalized space for inference : UI to interact with NS Brain, personalization and    
-- Analytics & Logging: Records query and response data for future improvements and monitoring usage patterns.
+- Personalized space for inference : UI to interact with NS Brain and a space to personalize it.    
 - Admin Tools: Includes commands for updating and syncing the wiki data to ensure accuracy.
 - Fallback Mechanism: Provides instructions for manual lookup if the API fails or returns no results.
 - Private Conversations - enable the NS Brain BOT for private DMs.
