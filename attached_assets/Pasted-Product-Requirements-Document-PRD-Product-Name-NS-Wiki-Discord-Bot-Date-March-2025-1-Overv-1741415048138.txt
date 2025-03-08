@@ -1,0 +1,78 @@
+Product Requirements Document (PRD)
+Product Name: NS Wiki Discord Bot
+Date: March 2025
+
+1. Overview
+Background:
+ Network School (NS) is a large campus community of around 80 people, many of whom come from various regions and are unfamiliar with local services such as laundry, dining, shopping options, and more. Although a comprehensive Notion wiki exists with answers to these common queries, not everyone is aware of how to access or use this resource. Given that all members use Discord for communication, there is an opportunity to streamline access to this knowledge base.
+Objective:
+ Develop a Discord bot that leverages the Deepseek API and the existing Notion wiki data to answer user queries in real time. The bot will extract context from the wiki and use it along with the user’s query to provide accurate and helpful responses.
+
+2. Problem Statement
+Challenge:
+New and existing NS members often struggle to find local information (e.g., best eateries, laundry services, shopping sites) quickly and effectively.
+The current Notion wiki, though comprehensive, is not integrated into the primary communication channel (Discord), causing friction in access and usage.
+Solution:
+Introduce a Discord bot that intercepts questions and returns relevant answers using the Deepseek API, which queries the wiki content as context.
+Reduce the learning curve for new members and enhance the overall user experience by delivering timely and precise answers.
+
+3. Goals & Success Metrics
+Primary Goals:
+Instant Information Access: Provide a single interface (Discord) where users can query and receive answers without leaving the chat.
+Enhanced Engagement: Encourage the use of the wiki by integrating it seamlessly into everyday communication.
+Accurate Responses: Utilize the Deepseek API to ensure answers are relevant, contextually accurate, and drawn from a verified source (the Notion wiki).
+5. Functional Requirements
+5.1 Discord Bot Integration
+Bot Presence:
+The bot should be active on the NS Discord server and accessible in designated channels.
+It must support both direct commands (e.g., !ask) and natural language queries.
+5.2 Query Handling & Response Generation
+User Query Processing:
+Detect and interpret user questions within Discord channels.
+Prepend the user query with system instructions and relevant wiki context.
+Deepseek API Integration:
+Utilize the Deepseek API key to submit a combined payload (system prompt + wiki data + user query).
+Process the API response and format it into a user-friendly message.
+Fallback Mechanism:
+If the API fails or returns no result, provide a default message with instructions on where to manually check the wiki.
+6. Non-Functional Requirements
+Performance:
+
+
+Bot responses should be delivered in under 3 seconds under normal network conditions.
+Reliability & Availability:
+
+
+The bot should maintain a 99% uptime. Include fallback protocols for API downtimes.
+Security:
+
+
+Securely store the Deepseek API key and any sensitive data.
+Ensure that only authorized personnel can update the bot’s configuration or wiki context.
+Usability:
+
+
+Design responses to be clear, concise, and actionable.
+The bot interface should be intuitive and require minimal training for end users.
+Scalability:
+
+
+Ensure the system can handle increased query volume without degradation of performance.
+
+7. System Architecture & Flow
+7.1 Architecture Components
+Discord Bot:
+Acts as the user interface within Discord.
+Deepseek API Service:
+Processes the combined context and query, returning a generated answer.
+Wiki Data Source:
+Notion wiki content acting as the knowledge base.
+Logging & Analytics Module:
+Tracks interactions for future improvements.
+7.2 Data Flow Diagram
+User Query: A user posts a question in Discord.
+Bot Interception: The bot detects the query and identifies its topic.
+API Request: The bot sends the system prompt, wiki context, and user query to the Deepseek API.
+Response Processing: The API returns a response, which the bot formats and posts back in Discord.
+Logging: The query and response are logged for analytics.
+
