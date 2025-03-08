@@ -6,6 +6,12 @@ import { setupBot } from "./discord/bot";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
+  // Add some initial wiki content for testing
+  await storage.createWikiContext({
+    topic: "Laundry Services",
+    content: "The campus has two laundry facilities. The main laundry room is located in Building A and is open 24/7. It accepts both coins and card payments. The secondary laundry room is in Building B and is open from 7 AM to 10 PM. Remember to bring your own detergent!"
+  });
+
   // Initialize Discord bot
   try {
     await setupBot();
