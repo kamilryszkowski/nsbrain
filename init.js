@@ -1,7 +1,7 @@
 // init.js
 // Initializes and sets up the Discord bot
 
-import { Client, Events, GatewayIntentBits, SlashCommandBuilder } from 'discord.js';
+import { Client, Events, GatewayIntentBits } from 'discord.js';
 
 // Initialize the Discord bot
 const initializeBot = (messageHandler) => {
@@ -10,36 +10,15 @@ const initializeBot = (messageHandler) => {
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent, // Needed to read message content
     ],
   });
-
-  // Register commands
-  const commands = {
-    ask: new SlashCommandBuilder()
-      .setName('ask')
-      .setDescription('Ask a question about Network School')
-      .addStringOption(option =>
-        option
-          .setName('question')
-          .setDescription('Your question about NS')
-          .setRequired(true)
-      )
-  };
 
   // Handle bot ready event
   const handleReady = async () => {
     console.log(`Discord bot logged in as ${client.user.tag}`);
-    
-    // Register slash commands for each guild
-    for (const guild of client.guilds.cache.values()) {
-      try {
-        console.log(`Registering commands for guild: ${guild.name}`);
-        await guild.commands.set([commands.ask.toJSON()]);
-        console.log(`Successfully registered commands for ${guild.name}`);
-      } catch (error) {
-        console.error(`Failed to register commands for ${guild.name}:`, error);
-      }
-    }
+    console.log(`Bot ID: ${client.user.id}`);
+    console.log('Bot is ready to respond to mentions!');
   };
 
   // Initialize the bot
@@ -48,7 +27,15 @@ const initializeBot = (messageHandler) => {
 
     // Set up event handlers
     client.on(Events.ClientReady, handleReady);
-    client.on(Events.InteractionCreate, messageHandler.handleSlashCommand);
+    
+    // Handle message events for mentions
+    client.on(Events.MessageCreate, (message) => {
+      // Ignore messages from bots (including itself)
+      if (message.author.bot) return;
+      
+      // Pass the message to the handler along with the bot's ID
+      messageHandler.handleMention(message, client.user.id);
+    });
 
     // Start the bot
     try {

@@ -44,42 +44,45 @@ ${wikiContent}`;
   };
 
   return {
-    // Handle slash commands
-    handleSlashCommand: async (interaction) => {
-      if (!interaction.isChatInputCommand()) return;
-
-      if (interaction.commandName === 'ask') {
-        const query = interaction.options.getString('question', true);
-        console.log('Processing /ask command:', query);
+    // Handle message with mentions
+    handleMention: async (message, botId) => {
+      // Check if the message mentions the bot
+      const isMentioned = message.mentions.users.has(botId);
+      
+      if (!isMentioned) {
+        return; // Not mentioned, ignore the message
+      }
+      
+      console.log(`Bot was mentioned by ${message.author.tag}: ${message.content}`);
+      
+      // Extract the query by removing the mention
+      // This regex removes all mentions from the message
+      const query = message.content.replace(/<@!?(\d+)>/g, '').trim();
+      
+      if (!query) {
+        await message.reply("Hello! Please ask me a question about Network School.");
+        return;
+      }
+      
+      // Show typing indicator
+      await message.channel.sendTyping();
+      
+      try {
+        const response = await generateResponse(query);
         
-        // Defer reply to give us time to call the API
-        await interaction.deferReply({ ephemeral: false });
+        // Split the response into chunks if it's too long
+        const chunks = chunkMessage(response);
         
-        try {
-          const response = await generateResponse(query);
-          
-          // Split the response into chunks if it's too long
-          const chunks = chunkMessage(response);
-          
-          // Send the first chunk as the initial reply
-          await interaction.editReply({
-            content: chunks[0],
-            ephemeral: false
-          });
-          
-          // Send any additional chunks as follow-up messages
-          for (let i = 1; i < chunks.length; i++) {
-            await interaction.followUp({
-              content: chunks[i],
-              ephemeral: false
-            });
-          }
-        } catch (error) {
-          await interaction.editReply({
-            content: 'Sorry, I could not process your request. Please try again later.',
-            ephemeral: false
-          });
+        // Send the first chunk as a reply to the original message
+        await message.reply(chunks[0]);
+        
+        // Send any additional chunks as follow-up messages
+        for (let i = 1; i < chunks.length; i++) {
+          await message.channel.send(chunks[i]);
         }
+      } catch (error) {
+        console.error('Error generating response:', error);
+        await message.reply('Sorry, I could not process your request. Please try again later.');
       }
     }
   };
