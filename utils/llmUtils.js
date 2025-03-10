@@ -1,4 +1,4 @@
-const transformSchemaForGoogle = (openAISchema) => {
+export const transformSchemaForGoogle = (openAISchema) => {
   const { schema } = openAISchema
 
   const removeAdditionalProperties = (obj) => {
@@ -26,7 +26,7 @@ const transformSchemaForGoogle = (openAISchema) => {
   }
 }
 
-const parseMessagesForGoogle = (messages) => {
+export const parseMessagesForGoogle = (messages) => {
   const systemInstruction = messages.find(m => m.role === 'system')?.content
 
   const history = messages
@@ -42,9 +42,4 @@ const parseMessagesForGoogle = (messages) => {
     .slice(-1)[0]?.content || ''
 
   return { systemInstruction, history, lastUserMessage }
-}
-
-module.exports = {
-  transformSchemaForGoogle,
-  parseMessagesForGoogle,
 }

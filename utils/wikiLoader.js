@@ -1,8 +1,13 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get the directory name in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load wiki content from all .txt and .csv files in the data/ folder
-function loadWikiContent() {
+export const loadWikiContent = () => {
   const dataDir = path.join(__dirname, 'data');
   let wikiContent = '';
   
@@ -49,10 +54,10 @@ function loadWikiContent() {
     console.error('Error loading wiki content:', error);
     return 'Error loading wiki content.';
   }
-}
+};
 
 // Process CSV file synchronously
-function processCSVSync(filePath) {
+const processCSVSync = (filePath) => {
   const content = fs.readFileSync(filePath, 'utf8');
   const lines = content.split('\n');
   
@@ -81,10 +86,10 @@ function processCSVSync(filePath) {
   }
   
   return result;
-}
+};
 
 // Parse a CSV line handling quoted values
-function parseCSVLine(line) {
+const parseCSVLine = (line) => {
   const result = [];
   let current = '';
   let inQuotes = false;
@@ -106,6 +111,4 @@ function parseCSVLine(line) {
   result.push(current.trim());
   
   return result;
-}
-
-module.exports = { loadWikiContent };
+};

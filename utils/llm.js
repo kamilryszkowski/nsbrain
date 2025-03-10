@@ -1,8 +1,8 @@
-const OpenAI = require('openai')
-const { GoogleGenerativeAI } = require('@google/generative-ai')
-const { transformSchemaForGoogle, parseMessagesForGoogle } = require('./llmUtils')
+import OpenAI from 'openai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import { transformSchemaForGoogle, parseMessagesForGoogle } from './llmUtils.js'
 
-const models = {
+export const models = {
   'GPT-4o': 'gpt-4o',
   'GPT-4o-mini': 'gpt-4o-mini',
   'gemini-2.0-flash': 'gemini-2.0-flash',
@@ -31,7 +31,7 @@ const getGoogleGenAI = () => new GoogleGenerativeAI(process.env.GEMINI_API_KEY |
  * provider. For Google models, the function will automatically transform the input
  * to the appropriate format.
  */
-const callLLM = async ({ model, messages, response_format }) => {
+export const callLLM = async ({ model, messages, response_format }) => {
   const provider = getProvider(model)
 
   let message,
@@ -82,7 +82,7 @@ const callLLM = async ({ model, messages, response_format }) => {
   return { message, usage }
 }
 
-const createEmbedding = async ({ text = '' }) => {
+export const createEmbedding = async ({ text = '' }) => {
   const CHARACTER_LIMIT_FOR_EMBEDDINGS = 20000 // max tokens is 8191
 
   try {
@@ -97,10 +97,4 @@ const createEmbedding = async ({ text = '' }) => {
     console.error(error)
     return null
   }
-}
-
-module.exports = {
-  callLLM,
-  models,
-  createEmbedding,
 }
