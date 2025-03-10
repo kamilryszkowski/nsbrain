@@ -2,32 +2,36 @@
 // Handles processing and responding to user messages
 
 import { callLLM, models } from './utils/llm.js';
-import { loadWikiContent } from './utils/wikiLoader.js';
 import { chunkMessage } from './utils/messageUtils.js';
+import { getContextForQuery } from './utils/ragService.js';
 
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
-  // Load wiki content
-  const wikiContent = loadWikiContent();
-  console.log('Wiki content loaded successfully');
+  // Base system prompt without context (context will be added dynamically)
+  const BASE_SYSTEM_PROMPT = `You are a helpful assistant for the Network School (NS) community. 
+Your goal is to provide accurate and concise answers based on the provided context.
+Always cite specific details from the context when available.
+If the context doesn't contain relevant information, acknowledge this and provide general information.`;
 
-  // System prompt with wiki content included
-  const SYSTEM_PROMPT = `You are a helpful assistant for the Network School (NS) community. 
-Your goal is to provide accurate and concise answers based on the provided wiki context.
-Always cite specific details from the wiki when available.
-
-Here is the wiki content:
-${wikiContent}`;
-
-  // LLM functionality
+  // LLM functionality with dynamic context retrieval
   const generateResponse = async (query) => {
     try {
+      // Retrieve relevant context for the query
+      const context = await getContextForQuery(query);
+      
+      // Create the full system prompt with context
+      const fullSystemPrompt = `${BASE_SYSTEM_PROMPT}
+
+Here is the context information:
+${context}`;
+
+      // Call the LLM with the query and context
       const result = await callLLM({
         model: models['gemini-2.0-flash'], // Use Gemini model
         messages: [
           {
             role: "system",
-            content: SYSTEM_PROMPT
+            content: fullSystemPrompt
           },
           {
             role: "user",
