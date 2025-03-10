@@ -3,6 +3,7 @@
 
 import { callLLM, models } from './utils/llm.js';
 import { loadWikiContent } from './utils/wikiLoader.js';
+import { chunkMessage } from './utils/messageUtils.js';
 
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
@@ -22,7 +23,7 @@ ${wikiContent}`;
   const generateResponse = async (query) => {
     try {
       const result = await callLLM({
-        model: models['GPT-4o'],
+        model: models['gemini-2.0-flash'],
         messages: [
           {
             role: "system",
@@ -34,8 +35,6 @@ ${wikiContent}`;
           }
         ],
       });
-
-      console
   
       return result.message;
     } catch (error) {
@@ -58,10 +57,23 @@ ${wikiContent}`;
         
         try {
           const response = await generateResponse(query);
+          
+          // Split the response into chunks if it's too long
+          const chunks = chunkMessage(response);
+          
+          // Send the first chunk as the initial reply
           await interaction.editReply({
-            content: response,
+            content: chunks[0],
             ephemeral: false
           });
+          
+          // Send any additional chunks as follow-up messages
+          for (let i = 1; i < chunks.length; i++) {
+            await interaction.followUp({
+              content: chunks[i],
+              ephemeral: false
+            });
+          }
         } catch (error) {
           await interaction.editReply({
             content: 'Sorry, I could not process your request. Please try again later.',
