@@ -1,56 +1,8 @@
-// utils/ragService.js
-// RAG (Retrieval Augmented Generation) service using Supabase
+// utils/rag/retrieval.js
+// Document retrieval functionality for RAG
 
-import { createClient } from '@supabase/supabase-js';
-import { createEmbedding } from './llm.js';
-import dotenv from 'dotenv';
-
-// Initialize environment variables
-dotenv.config();
-
-// Validate required environment variables
-const requiredEnvVars = ['SUPABASE_URL', 'SUPABASE_KEY'];
-const missing = requiredEnvVars.filter(key => !process.env[key]);
-if (missing.length > 0) {
-  console.warn(`Missing Supabase environment variables: ${missing.join(', ')}`);
-  console.warn('RAG functionality will not work properly');
-}
-
-// Initialize Supabase client
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Default namespace for Network School documents
-const DEFAULT_NAMESPACE = 'network_school';
-
-/**
- * Insert a document into the Supabase vector store
- * 
- * @param {Object} options - Options for inserting a document
- * @param {Array} options.vector - The embedding vector
- * @param {string} options.content - The text content
- * @param {string} options.url - Source URL or identifier
- * @param {string} options.namespace - Namespace for organizing documents
- * @returns {Promise<boolean>} - Success status
- */
-export const insertDocument = async ({ vector, content, url, namespace = DEFAULT_NAMESPACE }) => {
-  try {
-    const { error } = await supabase
-      .from('rag_documents')
-      .insert({ vector, content, url, namespace }); // doc_timestamp is set by default
-
-    if (error) {
-      console.error('Error inserting document:', error);
-      return false;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error('Exception inserting document:', error);
-    return false;
-  }
-};
+import supabase, { DEFAULT_NAMESPACE } from './client.js';
+import { createEmbedding } from '../llm.js';
 
 /**
  * Query nearest vectors by cosine similarity
@@ -109,7 +61,8 @@ export const findRelevantDocuments = async (query, namespace = DEFAULT_NAMESPACE
     // Extract and return the content from matches
     return matches.map(match => ({
       content: match.content,
-      similarity: match.similarity
+      similarity: match.similarity,
+      url: match.url
     }));
   } catch (error) {
     console.error('Error finding relevant documents:', error);
@@ -134,12 +87,12 @@ export const generateContextFromDocuments = (documents) => {
 };
 
 /**
- * Main function to retrieve context for a query
+ * Retrieve and format context for a query
  * 
  * @param {string} query - The user's query
  * @returns {Promise<string>} - Context string for the LLM
  */
-export const getContextForQuery = async (query) => {
+export const getRAG = async (query) => {
   try {
     const relevantDocs = await findRelevantDocuments(query);
     return generateContextFromDocuments(relevantDocs);

@@ -1,119 +1,157 @@
 // scripts/uploadDocuments.js
-// Utility script to upload documents to Supabase
+// Script to upload documents to the vector store
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { createEmbedding } from '../utils/llm.js';
-import { insertDocument } from '../utils/ragService.js';
-import dotenv from 'dotenv';
+import { processDocument, processCSVDocument } from '../utils/rag/index.js';
 
-// Initialize environment variables
-dotenv.config();
-
-// Get the directory name in ES modules
+// Get the directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Default namespace for Network School documents
-const DEFAULT_NAMESPACE = 'network_school';
-
 /**
- * Process a text file and upload its content to Supabase
+ * Process a file and upload its contents to the vector store
  * 
- * @param {string} filePath - Path to the text file
- * @param {string} namespace - Namespace for the document
- * @returns {Promise<boolean>} - Success status
+ * @param {string} filePath - Path to the file
+ * @returns {Promise<Object>} - Processing results
  */
-const processTextFile = async (filePath, namespace = DEFAULT_NAMESPACE) => {
+const processFile = async (filePath) => {
   try {
     console.log(`Processing file: ${filePath}`);
     
     // Read file content
     const content = fs.readFileSync(filePath, 'utf8');
+    const fileExtension = path.extname(filePath).toLowerCase();
+    const fileName = path.basename(filePath);
     
-    // Create embedding for the content
-    const vector = await createEmbedding({ text: content });
-    
-    if (!vector) {
-      console.error(`Failed to create embedding for file: ${filePath}`);
-      return false;
-    }
-    
-    // Insert document into Supabase
-    const success = await insertDocument({
-      vector,
-      content,
-      url: path.basename(filePath),
-      namespace
-    });
-    
-    if (success) {
-      console.log(`Successfully uploaded: ${filePath}`);
+    // Process based on file type
+    if (fileExtension === '.csv') {
+      return await processCSVFile(content, filePath);
     } else {
-      console.error(`Failed to upload: ${filePath}`);
+      // For text files, markdown, etc.
+      return await processTextFile(content, filePath);
     }
-    
-    return success;
   } catch (error) {
     console.error(`Error processing file ${filePath}:`, error);
-    return false;
+    return {
+      success: false,
+      error: error.message,
+      file: filePath
+    };
   }
 };
 
 /**
- * Process a directory of text files and upload them to Supabase
+ * Process a text file (txt, md, etc.)
  * 
- * @param {string} dirPath - Path to the directory
- * @param {string} namespace - Namespace for the documents
- * @returns {Promise<{total: number, success: number}>} - Upload statistics
+ * @param {string} content - File content
+ * @param {string} filePath - Path to the file
+ * @returns {Promise<Object>} - Processing results
  */
-const processDirectory = async (dirPath, namespace = DEFAULT_NAMESPACE) => {
-  try {
-    console.log(`Processing directory: ${dirPath}`);
-    
-    // Check if directory exists
-    if (!fs.existsSync(dirPath)) {
-      console.error(`Directory not found: ${dirPath}`);
-      return { total: 0, success: 0 };
+const processTextFile = async (content, filePath) => {
+  const fileName = path.basename(filePath);
+  
+  const result = await processDocument({
+    text: content,
+    source: fileName,
+    metadata: {
+      fileName,
+      filePath,
+      fileType: path.extname(filePath).substring(1)
     }
-    
-    // Get all files in the directory
-    const files = fs.readdirSync(dirPath);
-    const textFiles = files.filter(file => file.endsWith('.txt') || file.endsWith('.md'));
-    
-    console.log(`Found ${textFiles.length} text files in ${dirPath}`);
-    
-    let successCount = 0;
-    
-    // Process each text file
-    for (const file of textFiles) {
-      const filePath = path.join(dirPath, file);
-      const success = await processTextFile(filePath, namespace);
-      if (success) successCount++;
-    }
-    
-    return { total: textFiles.length, success: successCount };
-  } catch (error) {
-    console.error(`Error processing directory ${dirPath}:`, error);
-    return { total: 0, success: 0 };
-  }
+  });
+  
+  console.log(`Processed text file ${fileName}: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
+  return {
+    ...result,
+    file: filePath
+  };
 };
 
-// Main function
+/**
+ * Process a CSV file
+ * 
+ * @param {string} content - CSV content
+ * @param {string} filePath - Path to the file
+ * @returns {Promise<Object>} - Processing results
+ */
+const processCSVFile = async (content, filePath) => {
+  const fileName = path.basename(filePath);
+  
+  const result = await processCSVDocument({
+    csvContent: content,
+    source: fileName,
+    metadata: {
+      fileName,
+      filePath,
+      fileType: 'csv'
+    }
+  });
+  
+  console.log(`Processed CSV file ${fileName}: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
+  return {
+    ...result,
+    file: filePath
+  };
+};
+
+/**
+ * Main function to process all files in a directory
+ */
 const main = async () => {
-  try {
-    // Get data directory path
-    const dataDir = path.join(__dirname, '..', 'data');
-    
-    // Process all files in the data directory
-    const result = await processDirectory(dataDir);
-    
-    console.log(`Upload complete. Successfully uploaded ${result.success} of ${result.total} files.`);
-  } catch (error) {
-    console.error('Error in main function:', error);
+  // Get directory from command line arguments or use default
+  const docsDir = process.argv[2] || path.join(__dirname, '../data');
+  
+  if (!fs.existsSync(docsDir)) {
+    console.error(`Directory does not exist: ${docsDir}`);
+    process.exit(1);
+  }
+  
+  console.log(`Processing documents in: ${docsDir}`);
+  
+  // Get all files in the directory
+  const files = fs.readdirSync(docsDir)
+    .filter(file => {
+      const ext = path.extname(file).toLowerCase();
+      // Support text files, markdown, and CSV
+      return ['.txt', '.md', '.csv'].includes(ext);
+    })
+    .map(file => path.join(docsDir, file));
+  
+  if (files.length === 0) {
+    console.log('No supported files found in the directory.');
+    process.exit(0);
+  }
+  
+  console.log(`Found ${files.length} files to process.`);
+  
+  // Process each file
+  const results = [];
+  for (const file of files) {
+    const result = await processFile(file);
+    results.push(result);
+  }
+  
+  // Print summary
+  const successful = results.filter(r => r.success).length;
+  const totalChunks = results.reduce((sum, r) => sum + (r.totalChunks || 0), 0);
+  const successfulChunks = results.reduce((sum, r) => sum + (r.successfulChunks || 0), 0);
+  
+  console.log('\nSummary:');
+  console.log(`Files processed: ${successful}/${files.length}`);
+  console.log(`Chunks processed: ${successfulChunks}/${totalChunks}`);
+  
+  // List any failed files
+  const failed = results.filter(r => !r.success);
+  if (failed.length > 0) {
+    console.log('\nFailed files:');
+    failed.forEach(f => console.log(`- ${f.file}: ${f.error || 'Unknown error'}`));
   }
 };
 
-// Run the script
-main().catch(console.error); 
+// Run the main function
+main().catch(error => {
+  console.error('Unhandled error:', error);
+  process.exit(1);
+}); 

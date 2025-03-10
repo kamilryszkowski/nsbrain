@@ -3,7 +3,7 @@
 
 import { callLLM, models } from './utils/llm.js';
 import { chunkMessage } from './utils/messageUtils.js';
-import { getContextForQuery } from './utils/ragService.js';
+import { getRAG } from './utils/rag/index.js';
 
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
@@ -17,7 +17,9 @@ If the context doesn't contain relevant information, acknowledge this and provid
   const generateResponse = async (query) => {
     try {
       // Retrieve relevant context for the query
-      const context = await getContextForQuery(query);
+      const context = await getRAG(query);
+
+      console.log(context);
       
       // Create the full system prompt with context
       const fullSystemPrompt = `${BASE_SYSTEM_PROMPT}
