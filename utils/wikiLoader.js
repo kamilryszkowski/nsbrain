@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const csv = require('csv-parser');
 
 // Load wiki content from all .txt and .csv files in the data/ folder
 function loadWikiContent() {

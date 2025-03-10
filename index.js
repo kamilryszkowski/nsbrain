@@ -1,6 +1,6 @@
 const { Client, Events, GatewayIntentBits, SlashCommandBuilder } = require('discord.js');
 const { OpenAI } = require('openai');
-const { loadWikiContent } = require('./wikiLoader');
+const { loadWikiContent } = require('./utils/wikiLoader');
 require('dotenv').config();
 
 // Validate environment variables
