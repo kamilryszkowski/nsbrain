@@ -9,8 +9,6 @@ const initializeBot = (messageHandler) => {
   const client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
-      GatewayIntentBits.DirectMessages,
-      GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMessages,
     ],
   });
@@ -51,7 +49,6 @@ const initializeBot = (messageHandler) => {
     // Set up event handlers
     client.on(Events.ClientReady, handleReady);
     client.on(Events.InteractionCreate, messageHandler.handleSlashCommand);
-    client.on(Events.MessageCreate, messageHandler.handleDirectMessage);
 
     // Start the bot
     try {

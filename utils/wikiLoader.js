@@ -10,6 +10,8 @@ const __dirname = path.dirname(__filename);
 export const loadWikiContent = () => {
   const dataDir = path.join(__dirname, 'data');
   let wikiContent = '';
+
+  console.log('Loading wiki content from:', dataDir);
   
   // Create data directory if it doesn't exist
   if (!fs.existsSync(dataDir)) {
