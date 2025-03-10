@@ -34,6 +34,8 @@ ${wikiContent}`;
           }
         ],
       });
+
+      console
   
       return result.message;
     } catch (error) {

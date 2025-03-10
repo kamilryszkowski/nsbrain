@@ -8,7 +8,8 @@ const __dirname = path.dirname(__filename);
 
 // Load wiki content from all .txt and .csv files in the data/ folder
 export const loadWikiContent = () => {
-  const dataDir = path.join(__dirname, 'data');
+  // Go up one directory level to get to the project root, then into data/
+  const dataDir = path.join(__dirname, '..', 'data');
   let wikiContent = '';
 
   console.log('Loading wiki content from:', dataDir);
