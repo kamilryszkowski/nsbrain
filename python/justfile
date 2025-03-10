@@ -1,0 +1,29 @@
+# List all available commands
+default:
+    @just --list
+
+# Install dependencies
+install:
+    poetry install
+
+# Run all scrapers
+scrape:
+    poetry run python main.py
+
+# Data management commands
+clean-data:
+    rm -rf data/raw/*
+    rm -rf data/processed/*
+
+list-data:
+    @echo "Raw data files:"
+    @ls -l data/raw/
+    @echo "\nProcessed data files:"
+    @ls -l data/processed/
+
+# Get latest data files
+latest:
+    @echo "Latest raw data files:"
+    @ls -l data/raw/*_latest.csv 2>/dev/null || echo "No latest raw files found"
+    @echo "\nLatest processed data:"
+    @ls -l data/processed/nsbrain_latest.csv 2>/dev/null || echo "No latest processed file found"
