@@ -1,9 +1,6 @@
 // scripts/uploadDocuments.js
 // Script to upload documents to the vector store
 
-import { fileURLToPath } from 'url';
-import path from 'path';
-
 // Import data source ingestion functions
 import ingestDiscordData from '../data/discord/ingest.js';
 import ingestLumaData from '../data/luma/ingest.js';
