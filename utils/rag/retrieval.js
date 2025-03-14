@@ -99,7 +99,30 @@ export const generateContextFromDocuments = ({
     return `No relevant documents found in ${namespace}.`;
   }
   
-  return documents.map(doc => doc.content).join('\n\n');
+  // Format namespace header based on namespace type
+  let namespaceHeader;
+  switch(namespace) {
+    case NAMESPACES.BOOK:
+      namespaceHeader = "--- Context from Balaji's Network State book ---";
+      break;
+    case NAMESPACES.DISCORD:
+      namespaceHeader = "--- Context from Discord ---";
+      break;
+    case NAMESPACES.LUMA:
+      namespaceHeader = "--- Context from Luma ---";
+      break;
+    case NAMESPACES.WIKI:
+      namespaceHeader = "--- Context from Wiki ---";
+      break;
+    default:
+      namespaceHeader = `--- Context from ${namespace} ---`;
+  }
+  
+  // Join all document contents with line breaks
+  const documentContents = documents.map(doc => doc.content).join('\n\n');
+  
+  // Return formatted context with namespace header
+  return `${namespaceHeader}\n\n${documentContents}`;
 };
 
 /**
@@ -152,14 +175,17 @@ export const getRAG = async ({
     );
     
     // Generate context from all namespaces
-    const contextParts = namespaceResults.map(result => 
-      generateContextFromDocuments({ 
-        documents: result.documents, 
-        namespace: result.namespace 
-      })
-    );
+    const contextParts = namespaceResults
+      .filter(result => result.documents.length > 0) // Only include namespaces with results
+      .map(result => 
+        generateContextFromDocuments({ 
+          documents: result.documents, 
+          namespace: result.namespace 
+        })
+      );
     
-    return contextParts.join('\n\n');
+    // Join with double line breaks for better separation between namespace sections
+    return contextParts.join('\n\n\n');
   } catch (error) {
     console.error('Error getting context for query:', error);
     return 'Error retrieving context information.';
