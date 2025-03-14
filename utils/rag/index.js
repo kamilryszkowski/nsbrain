@@ -40,13 +40,9 @@ export const processDocument = async ({
             return null;
           }
           
-          // Include metadata in content since we don't have a metadata column
-          const metadataPrefix = `Source: ${source || 'Unknown'}\n`;
-          const enhancedContent = metadataPrefix + chunk.content;
-          
           return {
             vector: embedding,
-            content: enhancedContent,
+            content: chunk.content,
             url: source || ''
           };
         } catch (error) {
@@ -110,44 +106,89 @@ export const processCSVDocument = async ({
       };
     }
     
-    // Create embeddings for each document
-    const docsWithEmbeddings = await Promise.all(
-      documents.map(async (doc) => {
-        try {
-          const vector = await createEmbedding({ text: doc.content });
-          
-          if (!vector) {
-            console.error('Failed to create embedding for CSV row');
+    console.log(`Processing ${documents.length} documents in batches of 250...`);
+    
+    // Process documents in batches of 250
+    const BATCH_SIZE = 250;
+    let successfulChunks = 0;
+    let failedChunks = 0;
+    
+    /**
+     * Helper function to create embedding with retry logic
+     * 
+     * @param {string} text - Text to create embedding for
+     * @param {number} retries - Number of retries left
+     * @param {number} delay - Current delay in ms
+     * @returns {Promise<Array|null>} - Embedding vector or null
+     */
+    const createEmbeddingWithRetry = async (text, retries = 3, delay = 2000) => {
+      try {
+        const vector = await createEmbedding({ text });
+        return vector;
+      } catch (error) {
+        if (error.message && (error.message.includes('rate limit') || error.message.includes('429'))) {
+          if (retries > 0) {
+            console.log(`Rate limit hit, retrying in ${delay/1000} seconds...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return createEmbeddingWithRetry(text, retries - 1, delay * 2);
+          }
+        }
+        throw error;
+      }
+    };
+    
+    // Process in batches
+    for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+      const batch = documents.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(documents.length/BATCH_SIZE)} (${batch.length} documents)...`);
+      
+      // Create embeddings for each document in the batch
+      const batchWithEmbeddings = await Promise.all(
+        batch.map(async (doc) => {
+          try {
+            const vector = await createEmbeddingWithRetry(doc.content);
+            
+            if (!vector) {
+              console.error('Failed to create embedding for CSV row');
+              failedChunks++;
+              return null;
+            }
+            
+            return {
+              vector,
+              content: doc.content,
+              url: doc.url || source || ''
+            };
+          } catch (error) {
+            console.error('Error processing CSV row:', error);
+            failedChunks++;
             return null;
           }
-          
-          // Include metadata in content since we don't have a metadata column
-          const metadataPrefix = `Source: ${source || 'Unknown'}\n`;
-          const enhancedContent = metadataPrefix + doc.content;
-          
-          return {
-            vector,
-            content: enhancedContent,
-            url: doc.url || source || ''
-          };
-        } catch (error) {
-          console.error('Error processing CSV row:', error);
-          return null;
+        })
+      );
+      
+      // Filter out failed documents
+      const validBatchDocuments = batchWithEmbeddings.filter(doc => doc !== null);
+      
+      // Insert batch documents
+      if (validBatchDocuments.length > 0) {
+        const batchResult = await insertDocuments(validBatchDocuments, namespace);
+        successfulChunks += batchResult.count;
+        
+        console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} complete: ${batchResult.count}/${batch.length} documents inserted`);
+        
+        // Add a small delay between batches to avoid rate limiting
+        if (i + BATCH_SIZE < documents.length) {
+          await new Promise(resolve => setTimeout(resolve, 500));
         }
-      })
-    );
-    
-    // Filter out failed documents
-    const validDocuments = docsWithEmbeddings.filter(doc => doc !== null);
-    
-    // Insert documents in batch
-    const result = await insertDocuments(validDocuments, namespace);
+      }
+    }
     
     return {
-      success: result.success,
+      success: successfulChunks > 0,
       totalChunks: documents.length,
-      successfulChunks: result.count,
-      failedChunks: documents.length - result.count
+      successfulChunks,
+      failedChunks
     };
   } catch (error) {
     console.error('Error processing CSV document:', error);

@@ -94,7 +94,16 @@ export const createEmbedding = async ({ text = '' }) => {
 
     return response.data[0].embedding
   } catch (error) {
-    console.error(error)
-    return null
+    // Check if it's a rate limit error
+    if (error.status === 429 || (error.message && error.message.includes('rate limit'))) {
+      console.error('Rate limit exceeded when creating embedding')
+    } else if (error.status === 500) {
+      console.error('OpenAI server error when creating embedding')
+    } else {
+      console.error('Error creating embedding:', error.message || error)
+    }
+    
+    // Rethrow the error to be handled by the caller
+    throw error
   }
 }
