@@ -11,10 +11,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Define the namespace for Network School book data
-export const BOOK_NAMESPACE = 'ns_book';
+export const BOOK_NAMESPACE = 'book';
 
 /**
  * Process Network School book data from CSV file
+ * CSV format: url,content
  * 
  * @returns {Promise<Object>} - Processing results
  */

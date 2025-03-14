@@ -128,7 +128,7 @@ export const processCSVDocument = async ({
           return {
             vector,
             content: enhancedContent,
-            url: source || ''
+            url: doc.url || source || ''
           };
         } catch (error) {
           console.error('Error processing CSV row:', error);

@@ -15,6 +15,7 @@ export const LUMA_NAMESPACE = 'luma_events';
 
 /**
  * Process Luma events data from CSV file
+ * CSV format: url,content
  * 
  * @returns {Promise<Object>} - Processing results
  */

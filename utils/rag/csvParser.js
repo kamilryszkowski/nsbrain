@@ -19,6 +19,15 @@ export const processCSVContent = (csvContent, metadata = {}) => {
     // Parse header
     const headers = parseCSVLine(lines[0]);
     
+    // Verify that the CSV has the expected columns
+    const urlIndex = headers.findIndex(h => h.toLowerCase() === 'url');
+    const contentIndex = headers.findIndex(h => h.toLowerCase() === 'content');
+    
+    if (urlIndex === -1 || contentIndex === -1) {
+      console.error('CSV must contain "url" and "content" columns');
+      return [];
+    }
+    
     // Process each row
     const documents = [];
     
@@ -26,17 +35,17 @@ export const processCSVContent = (csvContent, metadata = {}) => {
       if (!lines[i].trim()) continue; // Skip empty lines
       
       const values = parseCSVLine(lines[i]);
-      if (values.length === 0) continue;
+      if (values.length < 2) continue; // Skip rows without enough values
       
-      // Create a formatted text representation of the row
-      let rowText = '';
-      for (let j = 0; j < headers.length && j < values.length; j++) {
-        rowText += `${headers[j]}: ${values[j]}. `;
-      }
+      const url = values[urlIndex];
+      const content = values[contentIndex];
+      
+      if (!content.trim()) continue; // Skip rows with empty content
       
       // Add row as a document
       documents.push({
-        content: rowText.trim(),
+        content: content.trim(),
+        url: url.trim(),
         metadata: {
           ...metadata,
           rowIndex: i,

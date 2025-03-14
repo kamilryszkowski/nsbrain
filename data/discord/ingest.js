@@ -15,6 +15,7 @@ export const DISCORD_NAMESPACE = 'discord';
 
 /**
  * Process Discord data from CSV file
+ * CSV format: url,content
  * 
  * @returns {Promise<Object>} - Processing results
  */

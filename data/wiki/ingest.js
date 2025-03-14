@@ -15,6 +15,7 @@ export const WIKI_NAMESPACE = 'wiki';
 
 /**
  * Process Wiki data from CSV file
+ * CSV format: url,content
  * 
  * @returns {Promise<Object>} - Processing results
  */
