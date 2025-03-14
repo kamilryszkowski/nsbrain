@@ -1,0 +1,4 @@
+channel,author,timestamp,content
+general,user1,2023-01-01T12:00:00Z,"This is a sample Discord message from the general channel."
+announcements,admin,2023-01-02T10:30:00Z,"Important announcement: Network School event next week!"
+questions,user2,2023-01-03T15:45:00Z,"Does anyone know how to access the Network School resources?" 
