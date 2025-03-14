@@ -10,9 +10,6 @@ import ingestLumaData from '../data/luma/ingest.js';
 import ingestWikiData from '../data/wiki/ingest.js';
 import ingestBookData from '../data/book/ingest.js';
 
-// Get the directory name
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
  * Process all data sources using their specific ingestion functions
