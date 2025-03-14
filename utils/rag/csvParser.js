@@ -1,6 +1,8 @@
 // utils/rag/csvParser.js
 // CSV parsing functionality for RAG
 
+import { parse } from 'csv-parse/sync';
+
 /**
  * Process CSV content into document chunks
  * 
@@ -12,18 +14,21 @@ export const processCSVContent = (csvContent, metadata = {}) => {
   if (!csvContent) return [];
   
   try {
-    // Parse CSV content
-    const lines = csvContent.split('\n');
-    if (lines.length < 2) return []; // Need at least header and one data row
+    // Parse CSV content using csv-parse library
+    // This automatically handles multi-line fields in quotes and other CSV complexities
+    const parsedRows = parse(csvContent, {
+      columns: true,       // Use the first row as column names
+      skip_empty_lines: true,  // Skip empty lines
+      trim: true,          // Trim whitespace from fields
+      relax_quotes: true,  // Be more forgiving with quotes
+      relax_column_count: true, // Allow rows with inconsistent column counts
+    });
     
-    // Parse header
-    const headers = parseCSVLine(lines[0]);
+    if (parsedRows.length === 0) return [];
     
     // Verify that the CSV has the expected columns
-    const urlIndex = headers.findIndex(h => h.toLowerCase() === 'url');
-    const contentIndex = headers.findIndex(h => h.toLowerCase() === 'content');
-    
-    if (urlIndex === -1 || contentIndex === -1) {
+    const firstRow = parsedRows[0];
+    if (!firstRow.url || !firstRow.content) {
       console.error('CSV must contain "url" and "content" columns');
       return [];
     }
@@ -31,24 +36,19 @@ export const processCSVContent = (csvContent, metadata = {}) => {
     // Process each row
     const documents = [];
     
-    for (let i = 1; i < lines.length; i++) {
-      if (!lines[i].trim()) continue; // Skip empty lines
+    for (let i = 0; i < parsedRows.length; i++) {
+      const row = parsedRows[i];
       
-      const values = parseCSVLine(lines[i]);
-      if (values.length < 2) continue; // Skip rows without enough values
-      
-      const url = values[urlIndex];
-      const content = values[contentIndex];
-      
-      if (!content.trim()) continue; // Skip rows with empty content
+      // Skip rows with empty content
+      if (!row.content || !row.content.trim()) continue;
       
       // Add row as a document
       documents.push({
-        content: content.trim(),
-        url: url.trim(),
+        content: row.content.trim(),
+        url: row.url ? row.url.trim() : '',
         metadata: {
           ...metadata,
-          rowIndex: i,
+          rowIndex: i + 1, // +1 because we're skipping the header row in the count
           source: metadata.source || 'csv'
         }
       });
@@ -61,32 +61,3 @@ export const processCSVContent = (csvContent, metadata = {}) => {
   }
 };
 
-/**
- * Parse a CSV line handling quoted values
- * 
- * @param {string} line - CSV line to parse
- * @returns {Array} - Array of values
- */
-export const parseCSVLine = (line) => {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    
-    if (char === '"' && (i === 0 || line[i-1] !== '\\')) {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-  
-  // Add the last field
-  result.push(current.trim());
-  
-  return result;
-}; 
