@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { processCSVDocument } from '../../utils/rag/index.js';
+import { processCSVDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -34,6 +34,10 @@ export const ingestBookData = async () => {
         source: 'book'
       };
     }
+    
+    // Delete existing documents under this namespace
+    console.log(`Clearing existing Network School book documents from database...`);
+    await deleteAllDocumentsInNamespace(BOOK_NAMESPACE);
     
     // Read file content
     const csvContent = fs.readFileSync(csvFilePath, 'utf8');

@@ -48,6 +48,20 @@ import { getRAG } from './utils/rag/index.js';
 const context = await getRAG("What is Network School?");
 ```
 
+### Document Management
+
+To manage documents in the database:
+
+```javascript
+import { deleteAllDocumentsInNamespace, insertDocuments } from './utils/rag/index.js';
+
+// Delete all documents in a namespace before ingesting new data
+await deleteAllDocumentsInNamespace('my_namespace');
+
+// Insert new documents
+const insertResult = await insertDocuments(documents, 'my_namespace');
+```
+
 ### Advanced Usage
 
 For more advanced use cases, you can import specific components:
@@ -57,6 +71,7 @@ import {
   splitTextIntoChunks, 
   findRelevantDocuments,
   insertDocuments,
+  deleteAllDocumentsInNamespace,
   supabase,
   DEFAULT_NAMESPACE
 } from './utils/rag/index.js';
@@ -80,6 +95,20 @@ const result = await insertDocuments({
 - Metadata is included directly in the content field since there's no separate metadata column
 - Source information is prefixed to the content to maintain context
 - The module adapts to the existing database schema without requiring changes
+- When ingesting complete datasets, existing documents in the same namespace are deleted first
+- Each data source uses a separate namespace for better organization and management
+
+## Data Ingestion Process
+
+The standard data ingestion process follows these steps:
+
+1. Delete all existing documents in the target namespace
+2. Read and parse the source data (CSV, text, etc.)
+3. Process the data into chunks with appropriate context
+4. Generate embeddings for each chunk
+5. Insert the chunks with their embeddings into the database
+
+This process ensures that each ingestion provides a complete and up-to-date dataset without duplicates.
 
 ## Configuration
 

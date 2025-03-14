@@ -4,6 +4,41 @@
 import supabase, { DEFAULT_NAMESPACE } from './client.js';
 
 /**
+ * Delete all documents under a specific namespace
+ * 
+ * @param {string} namespace - Namespace to delete documents from
+ * @returns {Promise<{success: boolean}>} - Success status
+ */
+export const deleteAllDocumentsInNamespace = async (namespace) => {
+  try {
+    if (!namespace) {
+      console.error('No namespace provided for deletion');
+      return { success: false };
+    }
+    
+    console.log(`Deleting all documents under namespace: ${namespace}`);
+    
+    // Delete all documents with the specified namespace
+    const { error: deleteError } = await supabase
+      .from('rag_documents')
+      .delete()
+      .eq('namespace', namespace);
+    
+    if (deleteError) {
+      console.error('Error deleting documents:', deleteError);
+      return { success: false };
+    }
+    
+    console.log(`Successfully deleted documents from namespace: ${namespace}`);
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Error deleting documents from namespace ${namespace}:`, error);
+    return { success: false };
+  }
+};
+
+/**
  * Insert documents into the Supabase vector store
  * 
  * @param {Array|Object} documents - Single document object or array of document objects
