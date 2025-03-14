@@ -2,98 +2,123 @@
 // Main RAG service that integrates all components
 
 import { createEmbedding } from '../llm.js';
-import { splitTextIntoChunks } from './chunking.js';
 import { processCSVContent } from './csvParser.js';
 import { insertDocuments, deleteAllDocumentsInNamespace } from './storage.js';
 import { getRAG } from './retrieval.js';
 import supabase, { DEFAULT_NAMESPACE } from './client.js';
 
+// Constants
+const BATCH_SIZE = 250;
+
 /**
- * Process a document by splitting it into chunks and storing with embeddings
+ * Create embeddings for documents and store them in the vector database
  * 
- * @param {Object} options - Document processing options
- * @param {string} options.text - The document text content
- * @param {string} options.source - Source URL or identifier
- * @param {Object} options.metadata - Additional metadata (stored in content)
- * @param {string} options.namespace - Namespace for the document
- * @returns {Promise<Object>} - Processing results with success count and total
+ * @param {Object} options - Options for processing
+ * @param {Array} options.documents - Array of document objects with content property
+ * @param {string} options.namespace - Namespace for the documents
+ * @returns {Promise<{success: boolean, totalCount: number, successCount: number, failedCount: number}>} - Processing results
  */
-export const processDocument = async ({ 
-  text, 
-  source, 
-  metadata = {}, 
+const createEmbeddingsAndStore = async ({ 
+  documents, 
   namespace = DEFAULT_NAMESPACE 
 }) => {
-  try {
-    // Split the document into chunks
-    const chunks = splitTextIntoChunks(text, metadata);
+  let successCount = 0;
+  let failedCount = 0;
+  
+  // Create embeddings and prepare documents for storage
+  console.log(`Creating embeddings for ${documents.length} documents...`);
+  
+  const documentsWithEmbeddings = [];
+  
+  // Process in batches to avoid overwhelming the embedding API
+  for (let i = 0; i < documents.length; i += BATCH_SIZE) {
+    const batch = documents.slice(i, i + BATCH_SIZE);
+    console.log(`Processing embedding batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(documents.length/BATCH_SIZE)}...`);
     
-    // Process each chunk
-    const documents = await Promise.all(
-      chunks.map(async (chunk) => {
+    // Create embeddings for each document in the batch
+    const batchResults = await Promise.all(
+      batch.map(async (doc) => {
         try {
-          // Create embedding for the chunk
-          const embedding = await createEmbedding({ text: chunk.content });
+          // Create embedding - no retry logic
+          const vector = await createEmbedding({ text: doc.content });
           
-          if (!embedding) {
-            console.error('Failed to create embedding for chunk');
+          if (!vector) {
+            console.error('Failed to create embedding');
+            failedCount++;
             return null;
           }
           
           return {
-            vector: embedding,
-            content: chunk.content,
-            url: source || ''
+            vector,
+            content: doc.content,
+            url: doc.url || ''
           };
         } catch (error) {
-          console.error('Error processing chunk:', error);
+          console.error('Error creating embedding:', error.message || error);
+          failedCount++;
           return null;
         }
       })
     );
     
-    // Filter out failed chunks
-    const validDocuments = documents.filter(doc => doc !== null);
+    // Add valid documents to the collection
+    documentsWithEmbeddings.push(...batchResults.filter(doc => doc !== null));
     
-    // Insert documents in batch
-    const result = await insertDocuments(validDocuments, namespace);
-    
-    return {
-      success: result.success,
-      totalChunks: chunks.length,
-      successfulChunks: result.count,
-      failedChunks: chunks.length - result.count
-    };
-  } catch (error) {
-    console.error('Error processing document:', error);
-    return {
-      success: false,
-      totalChunks: 0,
-      successfulChunks: 0,
-      failedChunks: 0,
-      error: error.message
-    };
+    // Add a small delay between batches to avoid rate limiting
+    if (i + BATCH_SIZE < documents.length) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
   }
+  
+  // Store documents with embeddings
+  console.log(`Storing ${documentsWithEmbeddings.length} documents with embeddings...`);
+  
+  // Process storage in batches
+  for (let i = 0; i < documentsWithEmbeddings.length; i += BATCH_SIZE) {
+    const batch = documentsWithEmbeddings.slice(i, i + BATCH_SIZE);
+    console.log(`Storing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(documentsWithEmbeddings.length/BATCH_SIZE)}...`);
+    
+    // Insert batch documents
+    if (batch.length > 0) {
+      const batchResult = await insertDocuments(batch, namespace);
+      successCount += batchResult.count;
+      failedCount += (batch.length - batchResult.count);
+      
+      console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} complete: ${batchResult.count}/${batch.length} documents inserted`);
+      
+      // Add a small delay between batches to avoid rate limiting
+      if (i + BATCH_SIZE < documentsWithEmbeddings.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+  
+  return {
+    success: successCount > 0,
+    totalCount: documents.length,
+    successCount,
+    failedCount
+  };
 };
 
 /**
- * Process a CSV file content
+ * Ingest a CSV file content into the vector database
  * 
- * @param {Object} options - CSV processing options
+ * @param {Object} options - CSV ingestion options
  * @param {string} options.csvContent - The CSV content as string
  * @param {string} options.source - Source URL or identifier
  * @param {Object} options.metadata - Additional metadata (stored in content)
  * @param {string} options.namespace - Namespace for the document
- * @returns {Promise<Object>} - Processing results
+ * @returns {Promise<Object>} - Ingestion results
  */
-export const processCSVDocument = async ({
+export const ingestDocument = async ({
   csvContent,
   source,
   metadata = {},
   namespace = DEFAULT_NAMESPACE
 }) => {
   try {
-    // Process CSV content into document chunks
+    // Parse CSV content into documents
     const documents = processCSVContent(csvContent, { source, ...metadata });
     
     if (!documents || documents.length === 0) {
@@ -106,92 +131,22 @@ export const processCSVDocument = async ({
       };
     }
     
-    console.log(`Processing ${documents.length} documents in batches of 250...`);
+    console.log(`Processing ${documents.length} CSV documents...`);
     
-    // Process documents in batches of 250
-    const BATCH_SIZE = 250;
-    let successfulChunks = 0;
-    let failedChunks = 0;
-    
-    /**
-     * Helper function to create embedding with retry logic
-     * 
-     * @param {string} text - Text to create embedding for
-     * @param {number} retries - Number of retries left
-     * @param {number} delay - Current delay in ms
-     * @returns {Promise<Array|null>} - Embedding vector or null
-     */
-    const createEmbeddingWithRetry = async (text, retries = 3, delay = 2000) => {
-      try {
-        const vector = await createEmbedding({ text });
-        return vector;
-      } catch (error) {
-        if (error.message && (error.message.includes('rate limit') || error.message.includes('429'))) {
-          if (retries > 0) {
-            console.log(`Rate limit hit, retrying in ${delay/1000} seconds...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            return createEmbeddingWithRetry(text, retries - 1, delay * 2);
-          }
-        }
-        throw error;
-      }
-    };
-    
-    // Process in batches
-    for (let i = 0; i < documents.length; i += BATCH_SIZE) {
-      const batch = documents.slice(i, i + BATCH_SIZE);
-      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(documents.length/BATCH_SIZE)} (${batch.length} documents)...`);
-      
-      // Create embeddings for each document in the batch
-      const batchWithEmbeddings = await Promise.all(
-        batch.map(async (doc) => {
-          try {
-            const vector = await createEmbeddingWithRetry(doc.content);
-            
-            if (!vector) {
-              console.error('Failed to create embedding for CSV row');
-              failedChunks++;
-              return null;
-            }
-            
-            return {
-              vector,
-              content: doc.content,
-              url: doc.url || source || ''
-            };
-          } catch (error) {
-            console.error('Error processing CSV row:', error);
-            failedChunks++;
-            return null;
-          }
-        })
-      );
-      
-      // Filter out failed documents
-      const validBatchDocuments = batchWithEmbeddings.filter(doc => doc !== null);
-      
-      // Insert batch documents
-      if (validBatchDocuments.length > 0) {
-        const batchResult = await insertDocuments(validBatchDocuments, namespace);
-        successfulChunks += batchResult.count;
-        
-        console.log(`Batch ${Math.floor(i/BATCH_SIZE) + 1} complete: ${batchResult.count}/${batch.length} documents inserted`);
-        
-        // Add a small delay between batches to avoid rate limiting
-        if (i + BATCH_SIZE < documents.length) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-    }
+    // Create embeddings and store documents
+    const result = await createEmbeddingsAndStore({
+      documents,
+      namespace
+    });
     
     return {
-      success: successfulChunks > 0,
+      success: result.success,
       totalChunks: documents.length,
-      successfulChunks,
-      failedChunks
+      successfulChunks: result.successCount,
+      failedChunks: result.failedCount
     };
   } catch (error) {
-    console.error('Error processing CSV document:', error);
+    console.error('Error ingesting document:', error);
     return {
       success: false,
       totalChunks: 0,
@@ -204,7 +159,6 @@ export const processCSVDocument = async ({
 
 // Export all components for external use
 export {
-  splitTextIntoChunks,
   processCSVContent,
   insertDocuments,
   deleteAllDocumentsInNamespace,

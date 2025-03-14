@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { processCSVDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
+import { ingestDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -44,18 +44,15 @@ export const ingestDiscordData = async () => {
     const csvContent = fs.readFileSync(csvFilePath, 'utf8');
     
     // Process the CSV content
-    const result = await processCSVDocument({
+    const result = await ingestDocument({
       csvContent,
-      source: 'Discord',
+      source: 'discord',
       namespace: DISCORD_NAMESPACE
     });
     
     console.log(`Discord data ingestion complete: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
     
-    return {
-      ...result,
-      source: 'discord'
-    };
+    return result;
   } catch (error) {
     console.error('Error ingesting Discord data:', error);
     return {

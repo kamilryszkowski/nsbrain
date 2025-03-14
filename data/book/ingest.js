@@ -4,7 +4,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { processCSVDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
+import { ingestDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
@@ -44,7 +44,7 @@ export const ingestBookData = async () => {
     const csvContent = fs.readFileSync(csvFilePath, 'utf8');
     
     // Process the CSV content
-    const result = await processCSVDocument({
+    const result = await ingestDocument({
       csvContent,
       source: 'Network School Book',
       namespace: BOOK_NAMESPACE
@@ -52,10 +52,7 @@ export const ingestBookData = async () => {
     
     console.log(`Network School book data ingestion complete: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
     
-    return {
-      ...result,
-      source: 'book'
-    };
+    return result;
   } catch (error) {
     console.error('Error ingesting Network School book data:', error);
     return {

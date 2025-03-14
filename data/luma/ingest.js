@@ -4,14 +4,14 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { processCSVDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
+import { ingestDocument, deleteAllDocumentsInNamespace } from '../../utils/rag/index.js';
 
 // Get the directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Define the namespace for Luma events data
-export const LUMA_NAMESPACE = 'luma_events';
+export const LUMA_NAMESPACE = 'luma';
 
 /**
  * Process Luma events data from CSV file
@@ -44,18 +44,15 @@ export const ingestLumaData = async () => {
     const csvContent = fs.readFileSync(csvFilePath, 'utf8');
     
     // Process the CSV content
-    const result = await processCSVDocument({
+    const result = await ingestDocument({
       csvContent,
-      source: 'Luma Events',
+      source: 'luma',
       namespace: LUMA_NAMESPACE
     });
     
     console.log(`Luma events data ingestion complete: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
     
-    return {
-      ...result,
-      source: 'luma'
-    };
+    return result;
   } catch (error) {
     console.error('Error ingesting Luma events data:', error);
     return {
