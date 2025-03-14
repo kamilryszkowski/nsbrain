@@ -73,4 +73,39 @@ export const splitTextIntoChunks = (text, metadata = {}, chunkSize = CHUNK_SIZE,
   }
   
   return chunks;
+};
+
+/**
+ * Process documents through chunking
+ * 
+ * @param {Array} documents - Array of document objects with content property
+ * @returns {Array} - Array of chunked documents
+ */
+export const chunkDocuments = (documents) => {
+  if (!documents || !Array.isArray(documents) || documents.length === 0) {
+    return [];
+  }
+  
+  console.log(`Chunking ${documents.length} documents...`);
+  const chunkedDocuments = [];
+  
+  // Process each document and chunk it
+  for (const doc of documents) {
+    const chunks = splitTextIntoChunks(doc.content, {
+      url: doc.url,
+      ...(doc.metadata || {})
+    });
+    
+    // Convert chunks to the document format
+    const docChunks = chunks.map(chunk => ({
+      content: chunk.content,
+      url: doc.url || '',
+      metadata: chunk.metadata
+    }));
+    
+    chunkedDocuments.push(...docChunks);
+  }
+  
+  console.log(`Chunked ${documents.length} documents into ${chunkedDocuments.length} chunks`);
+  return chunkedDocuments;
 }; 

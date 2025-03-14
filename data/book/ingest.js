@@ -43,11 +43,12 @@ export const ingestBookData = async () => {
     // Read file content
     const csvContent = fs.readFileSync(csvFilePath, 'utf8');
     
-    // Process the CSV content
+    // Process the CSV content with chunking enabled
     const result = await ingestDocument({
       csvContent,
       source: 'Network School Book',
-      namespace: BOOK_NAMESPACE
+      namespace: BOOK_NAMESPACE,
+      chunkContent: true // Enable chunking for book content
     });
     
     console.log(`Network School book data ingestion complete: ${result.successfulChunks}/${result.totalChunks} chunks successful`);
