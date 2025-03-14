@@ -3,7 +3,7 @@
 
 import { callLLM, models } from './utils/llm.js';
 import { chunkMessage } from './utils/messageUtils.js';
-import { getRAG } from './utils/rag/index.js';
+import { getRAG, NAMESPACES } from './utils/rag/index.js';
 
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
@@ -16,8 +16,12 @@ If the context doesn't contain relevant information, acknowledge this and provid
   // LLM functionality with dynamic context retrieval
   const generateResponse = async (query) => {
     try {
-      // Retrieve relevant context for the query
-      const context = await getRAG(query);
+      // Retrieve relevant context for the query from all 4 namespaces
+      const context = await getRAG({ 
+        query,
+        namespaces: [NAMESPACES.BOOK, NAMESPACES.DISCORD, NAMESPACES.LUMA, NAMESPACES.WIKI],
+        limit: 5 // Fetch 5 chunks from each namespace
+      });
 
       console.log(context);
       

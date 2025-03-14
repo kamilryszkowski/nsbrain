@@ -4,7 +4,7 @@
 import { createEmbedding } from '../llm.js';
 import { processCSVContent } from './csvParser.js';
 import { insertDocuments, deleteAllDocumentsInNamespace } from './storage.js';
-import { getRAG } from './retrieval.js';
+import { getRAG, NAMESPACES } from './retrieval.js';
 import supabase, { DEFAULT_NAMESPACE } from './client.js';
 import { chunkDocuments } from './chunking.js';
 
@@ -188,6 +188,7 @@ export {
   insertDocuments,
   deleteAllDocumentsInNamespace,
   getRAG,
+  NAMESPACES,
   supabase,
   DEFAULT_NAMESPACE
 }; 

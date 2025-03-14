@@ -4,16 +4,29 @@
 import supabase, { DEFAULT_NAMESPACE } from './client.js';
 import { createEmbedding } from '../llm.js';
 
+// Define available namespaces
+export const NAMESPACES = {
+  BOOK: 'book',
+  DISCORD: 'discord',
+  LUMA: 'luma',
+  WIKI: 'wiki',
+  DEFAULT: DEFAULT_NAMESPACE
+};
+
 /**
  * Query nearest vectors by cosine similarity
  * 
- * @param {Object} options - Query options
- * @param {Array} options.queryVector - The query embedding vector
- * @param {string} options.namespace - Namespace to search in
- * @param {number} options.limit - Maximum number of results
+ * @param {Object} params - Query parameters
+ * @param {Array} params.queryVector - The query embedding vector
+ * @param {string} params.namespace - Namespace to search in
+ * @param {number} params.limit - Maximum number of results
  * @returns {Promise<Array>} - Array of matching documents
  */
-export const queryVectors = async ({ queryVector, namespace = DEFAULT_NAMESPACE, limit = 5 }) => {
+export const queryVectors = async ({ 
+  queryVector, 
+  namespace = DEFAULT_NAMESPACE, 
+  limit = 5 
+}) => {
   try {
     const { data, error } = await supabase.rpc('match_documents', {
       query_vec: queryVector,
@@ -73,29 +86,80 @@ export const findRelevantDocuments = async (query, namespace = DEFAULT_NAMESPACE
 /**
  * Generate a context string from relevant documents
  * 
- * @param {Array} documents - Array of document objects with content
+ * @param {Object} params - Parameters
+ * @param {Array} params.documents - Array of document objects with content
+ * @param {string} params.namespace - The namespace the documents came from
  * @returns {string} - Formatted context string
  */
-export const generateContextFromDocuments = (documents) => {
+export const generateContextFromDocuments = ({ 
+  documents, 
+  namespace = 'unknown' 
+}) => {
   if (!documents || documents.length === 0) {
-    return 'No relevant documents found.';
+    return `No relevant documents found in ${namespace}.`;
   }
   
-  return documents.map((doc, index) => 
-    `Document ${index + 1} (similarity: ${(doc.similarity * 100).toFixed(2)}%):\n${doc.content}`
-  ).join('\n\n');
+  return documents.map(doc => doc.content).join('\n\n');
 };
 
 /**
- * Retrieve and format context for a query
+ * Retrieve and format context for a query from multiple namespaces
  * 
- * @param {string} query - The user's query
+ * @param {Object} params - Parameters
+ * @param {string} params.query - The user's query
+ * @param {Array<string>} params.namespaces - Array of namespaces to search in
+ * @param {number} params.limit - Maximum number of results per namespace
  * @returns {Promise<string>} - Context string for the LLM
  */
-export const getRAG = async (query) => {
+export const getRAG = async ({ 
+  query, 
+  namespaces = [NAMESPACES.BOOK, NAMESPACES.DISCORD, NAMESPACES.LUMA, NAMESPACES.WIKI], 
+  limit = 5 
+}) => {
   try {
-    const relevantDocs = await findRelevantDocuments(query);
-    return generateContextFromDocuments(relevantDocs);
+    // Create embedding for the query (only need to do this once)
+    const queryEmbedding = await createEmbedding({ text: query });
+    
+    if (!queryEmbedding) {
+      console.error('Failed to create embedding for query');
+      return 'Error: Failed to create embedding for query.';
+    }
+    
+    // Query each namespace in parallel
+    const namespaceResults = await Promise.all(
+      namespaces.map(async (namespace) => {
+        try {
+          // Query for similar documents in this namespace
+          const matches = await queryVectors({
+            queryVector: queryEmbedding,
+            namespace,
+            limit
+          });
+          
+          // Extract and format the content from matches
+          const documents = matches.map(match => ({
+            content: match.content,
+            similarity: match.similarity,
+            url: match.url
+          }));
+          
+          return { namespace, documents };
+        } catch (error) {
+          console.error(`Error finding documents in namespace ${namespace}:`, error);
+          return { namespace, documents: [] };
+        }
+      })
+    );
+    
+    // Generate context from all namespaces
+    const contextParts = namespaceResults.map(result => 
+      generateContextFromDocuments({ 
+        documents: result.documents, 
+        namespace: result.namespace 
+      })
+    );
+    
+    return contextParts.join('\n\n');
   } catch (error) {
     console.error('Error getting context for query:', error);
     return 'Error retrieving context information.';
