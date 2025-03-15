@@ -17,6 +17,22 @@ const initializeBot = (messageHandler) => {
     ],
   });
 
+  // Track recently processed messages to prevent duplicates
+  const processedMessages = new Set();
+  const MESSAGE_EXPIRY = 30000; // Remove message IDs after 30 seconds
+
+  // Helper to track processed messages
+  const trackMessage = (messageId) => {
+    if (processedMessages.has(messageId)) {
+      return false; // Already processed
+    }
+    processedMessages.add(messageId);
+    setTimeout(() => {
+      processedMessages.delete(messageId);
+    }, MESSAGE_EXPIRY);
+    return true; // New message
+  };
+
   // Handle bot ready event
   const handleReady = async () => {
     console.log(`Discord bot logged in as ${client.user.tag}`);
@@ -35,7 +51,10 @@ const initializeBot = (messageHandler) => {
       // Ignore messages from bots (including itself)
       if (message.author.bot) return;
       
-      // Check if the message is a DM using multiple methods
+      // Check if message was already processed
+      if (!trackMessage(message.id)) return;
+      
+      // Check if the message is a DM
       const isDM = message.channel.type === ChannelType.DM || 
                    message.channel.type === 'DM' || 
                    message.channel.type === 1 || 
@@ -58,6 +77,9 @@ const initializeBot = (messageHandler) => {
     client.on('raw', packet => {
       // Only process direct messages from the raw packet
       if (packet.t === 'MESSAGE_CREATE' && packet.d && !packet.d.guild_id && !packet.d.author.bot) {
+        // Check if message was already processed
+        if (!trackMessage(packet.d.id)) return;
+        
         // Try to get the channel and user from the client cache
         try {
           const channelId = packet.d.channel_id;
@@ -68,6 +90,7 @@ const initializeBot = (messageHandler) => {
             if (channel) {
               // Create a simple message-like object for the handler
               const simpleMessage = {
+                id: packet.d.id, // Add message ID for tracking
                 content: packet.d.content,
                 author: {
                   id: userId,

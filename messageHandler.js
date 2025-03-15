@@ -34,12 +34,38 @@ const formatMessageInfo = (message) => {
   return `[${timestamp}] ${guildInfo} | ${channelInfo} | ${sender}`;
 };
 
+/**
+ * Retry a function with exponential backoff
+ * @param {Function} fn - Function to retry
+ * @param {Object} options - Retry options
+ * @returns {Promise} - Result of the function
+ */
+const retryWithBackoff = async (fn, { maxRetries = 3, initialDelay = 1000, maxDelay = 10000 } = {}) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt === maxRetries - 1) break;
+      
+      // Calculate delay with exponential backoff
+      const delay = Math.min(initialDelay * Math.pow(2, attempt), maxDelay);
+      console.log(`Attempt ${attempt + 1} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
   // Base system prompt without context (context will be added dynamically)
   const BASE_SYSTEM_PROMPT = `You are a helpful assistant for the Network School (NS) community. 
 
-Your goal is to provide accurate and concise answers based on the provided context. Under each context chunk, its respective source URL is provided.
+Your goal is to provide accurate and concise answers based on the provided context, and if it's a general question, your general knowledge. Under each context chunk, its respective source URL is provided.
 
 At the end of your response, include a "Sources:" section that lists only the URLs of sources you actually referenced in your answer. If a source wasn't used in your answer, don't include it. The URLs should be provided in plain text, NOT as markdown links.
 
@@ -61,20 +87,23 @@ If the context doesn't contain relevant information, acknowledge this and provid
 Here is the context information:
 ${context}`;
 
-      // Call the LLM with the query and context
-      const result = await callLLM({
-        model: models['gemini-2.0-flash'], // Use Gemini model
-        messages: [
-          {
-            role: "system",
-            content: fullSystemPrompt
-          },
-          {
-            role: "user",
-            content: query
-          }
-        ],
-      });
+      // Call the LLM with retries
+      const result = await retryWithBackoff(
+        async () => callLLM({
+          model: models['gemini-2.0-flash'],
+          messages: [
+            {
+              role: "system",
+              content: fullSystemPrompt
+            },
+            {
+              role: "user",
+              content: query
+            }
+          ],
+        }),
+        { maxRetries: 3, initialDelay: 1000 }
+      );
   
       // Only wrap URLs in the Sources section
       const parts = result.message.split('Sources:');
@@ -88,55 +117,57 @@ ${context}`;
       // If no Sources section found, return as is
       return result.message;
     } catch (error) {
-      console.error('Error calling LLM API:', error.message);
+      console.error('Error calling LLM API:', error);
       throw new Error('Failed to generate response');
     }
   };
 
   // Safely send a message using multiple fallback methods
   const safeSendMessage = async (message, content) => {
-    let sentSuccessfully = false;
-    let error = null;
-    
-    // Method 1: Try channel.send
-    if (!sentSuccessfully && message.channel && typeof message.channel.send === 'function') {
-      try {
-        await message.channel.send(content);
-        sentSuccessfully = true;
-      } catch (err) {
-        error = err;
+    return retryWithBackoff(async () => {
+      let sentSuccessfully = false;
+      let error = null;
+      
+      // Method 1: Try channel.send
+      if (!sentSuccessfully && message.channel && typeof message.channel.send === 'function') {
+        try {
+          await message.channel.send(content);
+          sentSuccessfully = true;
+        } catch (err) {
+          error = err;
+        }
       }
-    }
-    
-    // Method 2: Try reply
-    if (!sentSuccessfully && typeof message.reply === 'function') {
-      try {
-        await message.reply(content);
-        sentSuccessfully = true;
-      } catch (err) {
-        error = err;
+      
+      // Method 2: Try reply
+      if (!sentSuccessfully && typeof message.reply === 'function') {
+        try {
+          await message.reply(content);
+          sentSuccessfully = true;
+        } catch (err) {
+          error = err;
+        }
       }
-    }
-    
-    // Method 3: Try createDM
-    if (!sentSuccessfully && message.author && typeof message.author.createDM === 'function') {
-      try {
-        const dmChannel = await message.author.createDM();
-        await dmChannel.send(content);
-        sentSuccessfully = true;
-      } catch (err) {
-        error = err;
+      
+      // Method 3: Try createDM
+      if (!sentSuccessfully && message.author && typeof message.author.createDM === 'function') {
+        try {
+          const dmChannel = await message.author.createDM();
+          await dmChannel.send(content);
+          sentSuccessfully = true;
+        } catch (err) {
+          error = err;
+        }
       }
-    }
-    
-    if (sentSuccessfully) {
-      // Log the sent message
-      console.log(`${formatMessageInfo(message)} | Response sent: ${content.slice(0, 100)}${content.length > 100 ? '...' : ''}`);
-      return true;
-    } else {
-      if (error) throw error;
-      throw new Error('Failed to send message via any method');
-    }
+      
+      if (sentSuccessfully) {
+        // Log the sent message
+        console.log(`${formatMessageInfo(message)} | Response sent: ${content.slice(0, 100)}${content.length > 100 ? '...' : ''}`);
+        return true;
+      } else {
+        if (error) throw error;
+        throw new Error('Failed to send message via any method');
+      }
+    }, { maxRetries: 3, initialDelay: 1000 });
   };
 
   // Process a query and send the response
@@ -151,16 +182,19 @@ ${context}`;
         }
       }
       
-      // Generate response
-      const response = await generateResponse(query);
+      // Generate response with retries
+      const response = await retryWithBackoff(
+        () => generateResponse(query),
+        { maxRetries: 3, initialDelay: 1000 }
+      );
       
       // Split the response into chunks if it's too long
       const chunks = chunkMessage(response);
       
-      // Send the first chunk
+      // Send the first chunk with retries
       const firstChunkSent = await safeSendMessage(message, chunks[0]);
       
-      // Send any additional chunks
+      // Send any additional chunks with retries
       if (firstChunkSent && chunks.length > 1) {
         for (let i = 1; i < chunks.length; i++) {
           try {
