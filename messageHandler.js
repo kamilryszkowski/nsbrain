@@ -5,6 +5,17 @@ import { callLLM, models } from './utils/llm.js';
 import { chunkMessage } from './utils/messageUtils.js';
 import { getRAG, NAMESPACES } from './utils/rag/index.js';
 
+/**
+ * Wraps URLs in a text with angle brackets to prevent Discord from unfurling them
+ * @param {string} text - The text containing URLs
+ * @returns {string} - Text with URLs wrapped in angle brackets
+ */
+const wrapUrlsInAngleBrackets = (text) => {
+  // This regex matches URLs that aren't already wrapped in angle brackets
+  const urlRegex = /(?<!<)(https?:\/\/[^\s>]+)(?!>)/g;
+  return text.replace(urlRegex, '<$1>');
+};
+
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
   // Base system prompt without context (context will be added dynamically)
@@ -47,7 +58,8 @@ ${context}`;
         ],
       });
   
-      return result.message;
+      // Wrap URLs in the response with angle brackets, to prevent Discord from unfurling them
+      return wrapUrlsInAngleBrackets(result.message);
     } catch (error) {
       console.error('Error calling LLM API:', error.message);
       throw new Error('Failed to generate response');
