@@ -16,6 +16,24 @@ const wrapUrlsInAngleBrackets = (text) => {
   return text.replace(urlRegex, '<$1>');
 };
 
+/**
+ * Format a message for logging
+ * @param {Object} message - Discord message object
+ * @returns {string} - Formatted message info
+ */
+const formatMessageInfo = (message) => {
+  const timestamp = new Date().toISOString();
+  const sender = message.author?.tag || 'Unknown User';
+  const channelInfo = message.channel?.name 
+    ? `#${message.channel.name}` 
+    : message.channel?.type === 'DM' 
+      ? 'DM' 
+      : 'Unknown Channel';
+  const guildInfo = message.guild?.name || 'DM';
+  
+  return `[${timestamp}] ${guildInfo} | ${channelInfo} | ${sender}`;
+};
+
 // Create message handler with all necessary functionality
 const createMessageHandler = () => {
   // Base system prompt without context (context will be added dynamically)
@@ -58,8 +76,17 @@ ${context}`;
         ],
       });
   
-      // Wrap URLs in the response with angle brackets, to prevent Discord from unfurling them
-      return wrapUrlsInAngleBrackets(result.message);
+      // Only wrap URLs in the Sources section
+      const parts = result.message.split('Sources:');
+      if (parts.length === 2) {
+        // Wrap URLs in angle brackets only in the sources section
+        const mainContent = parts[0];
+        const sourcesSection = wrapUrlsInAngleBrackets(parts[1]);
+        return `${mainContent}Sources:${sourcesSection}`;
+      }
+      
+      // If no Sources section found, return as is
+      return result.message;
     } catch (error) {
       console.error('Error calling LLM API:', error.message);
       throw new Error('Failed to generate response');
@@ -103,6 +130,8 @@ ${context}`;
     }
     
     if (sentSuccessfully) {
+      // Log the sent message
+      console.log(`${formatMessageInfo(message)} | Response sent: ${content.slice(0, 100)}${content.length > 100 ? '...' : ''}`);
       return true;
     } else {
       if (error) throw error;
@@ -169,6 +198,9 @@ ${context}`;
         // This regex removes all mentions from the message
         const query = message.content.replace(/<@!?(\d+)>/g, '').trim();
         
+        // Log the received mention
+        console.log(`${formatMessageInfo(message)} | Mention received: ${query}`);
+        
         if (!query) {
           await safeSendMessage(message, "Hello! Please ask me a question about Network School.");
           return;
@@ -184,6 +216,9 @@ ${context}`;
     handleDirectMessage: async (message) => {
       try {
         const query = message.content.trim();
+        
+        // Log the received DM
+        console.log(`${formatMessageInfo(message)} | DM received: ${query}`);
         
         if (!query) {
           try {
