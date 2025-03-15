@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "upload-docs": "node scripts/uploadDocuments.js"
+    "upload-docs": "node scripts/uploadDocuments.js",
+    "eval": "node eval/index.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.0",
