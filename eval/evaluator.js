@@ -40,7 +40,7 @@ You are an expert evaluator of LLM responses about the Network State project.
 You'll be given a question and an answer provided by an LLM system.
 
 Please evaluate the answer based on the following criteria:
-1. Accuracy (1-5): Did the AI provide a direct answer to the question? Score 5 if the answer directly addresses the question with specific information, and 1 if it completely fails to provide a useful answer.
+1. Accuracy (1-5): Did the AI provide a direct answer to the question? Score 5 if the answer directly addresses the question with specific information, and 1 if it completely fails to provide anything useful.
 2. Quality (1-5): How well-formatted, clear, and well-structured is the answer? This is about presentation, organization, and readability, not content. Score 5 for excellent formatting and structure, and 1 for poor formatting.
 
 For each criterion, provide:
