@@ -11,8 +11,8 @@ import { getFlattenedQuestions } from './questions.js';
 import { evaluateResponse } from './evaluator.js';
 import { saveResults, calculateStats } from './utils.js';
 
-// Import LLM utility from our wrapper
-import { getLLMResponse } from './llm-wrapper.js';
+// Import LLM utilities
+import { generateResponse } from '../infer.js';
 
 /**
  * Run the evaluation on the entire question set
@@ -38,16 +38,16 @@ async function runEvaluation(verbose = true) {
     }
     
     try {
-      // Get LLM response to the question
-      console.log('Fetching LLM response...');
-      const answer = await getLLMResponse(question);
+      // Get LLM response to the question using the production pipeline
+      console.log('Fetching LLM response using production pipeline...');
+      const answer = await generateResponse(question);
       
       if (verbose) {
         console.log('\nAnswer:');
         console.log(answer);
       }
       
-      // Evaluate the response
+      // Evaluate the response using the evaluator
       console.log('Evaluating response...');
       const evaluation = await evaluateResponse(question, answer);
       

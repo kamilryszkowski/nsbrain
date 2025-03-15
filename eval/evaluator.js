@@ -3,7 +3,8 @@
  */
 
 // Import LLM utility from our wrapper
-import { getLLMResponse } from './llm-wrapper.js';
+import { generateResponse } from '../infer.js';
+import { models } from '../utils/llm.js';
 
 /**
  * Extract JSON from a string that might contain markdown formatting
@@ -65,8 +66,12 @@ Return ONLY the JSON object without any additional text, explanation, or markdow
 `;
 
   try {
+    // Use GPT-4o for evaluation
+    const defaultModel = models['GPT-4o'] || 'gpt-4o';
+    
     // Call the LLM with the evaluation prompt
-    const evaluationResponse = await getLLMResponse(evaluationPrompt);
+    const evaluationResponse = await generateResponse(evaluationPrompt);
+    
     console.log("Raw evaluation response:", evaluationResponse.substring(0, 100) + "...");
     
     // Extract JSON from the response
