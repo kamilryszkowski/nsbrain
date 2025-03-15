@@ -65,7 +65,7 @@ const createMessageHandler = () => {
   // Base system prompt without context (context will be added dynamically)
   const BASE_SYSTEM_PROMPT = `You are a helpful assistant for the Network School (NS) community. 
 
-Your goal is to provide accurate and concise answers based on the provided context, and if it's a general question, your general knowledge. Under each context chunk, its respective source URL is provided.
+Your goal is to provide accurate and concise answers using the provided context (if relevant), and if it's a general question, your general knowledge. Under each context chunk, its respective source URL is provided.
 
 At the end of your response, include a "Sources:" section that lists only the URLs of sources you actually referenced in your answer. If a source wasn't used in your answer, don't include it. The URLs should be provided in plain text, NOT as markdown links.
 
