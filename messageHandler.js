@@ -9,21 +9,22 @@ import { getRAG, NAMESPACES } from './utils/rag/index.js';
 const createMessageHandler = () => {
   // Base system prompt without context (context will be added dynamically)
   const BASE_SYSTEM_PROMPT = `You are a helpful assistant for the Network School (NS) community. 
-Your goal is to provide accurate and concise answers based on the provided context.
-Always cite specific details from the context when available.
+
+Your goal is to provide accurate and concise answers based on the provided context. Under each context chunk, its respective source URL is provided.
+
+At the end of your response, include a "Sources:" section that lists only the URLs of sources you actually referenced in your answer. If a source wasn't used in your answer, don't include it. The URLs should be provided in plain text, NOT as markdown links.
+
 If the context doesn't contain relevant information, acknowledge this and provide general information.`;
 
   // LLM functionality with dynamic context retrieval
   const generateResponse = async (query) => {
     try {
       // Retrieve relevant context for the query from all 4 namespaces
-      const context = await getRAG({ 
+      const { context } = await getRAG({ 
         query,
         namespaces: [NAMESPACES.BOOK, NAMESPACES.DISCORD, NAMESPACES.LUMA, NAMESPACES.WIKI],
         limit: 5 // Fetch 5 chunks from each namespace
       });
-
-      console.log(context);
       
       // Create the full system prompt with context
       const fullSystemPrompt = `${BASE_SYSTEM_PROMPT}

@@ -118,11 +118,14 @@ export const generateContextFromDocuments = ({
       namespaceHeader = `--- Context from ${namespace} ---`;
   }
   
-  // Join all document contents with line breaks
-  const documentContents = documents.map(doc => doc.content).join('\n\n');
+  // Format each document with its source
+  const formattedDocuments = documents.map(doc => {
+    const sourceInfo = doc.url ? `Source: ${doc.url}` : 'Source: No URL available';
+    return `${doc.content}\n\n${sourceInfo}`;
+  });
   
-  // Return formatted context with namespace header
-  return `${namespaceHeader}\n\n${documentContents}`;
+  // Return formatted context with namespace header and documents with sources
+  return `${namespaceHeader}\n\n${formattedDocuments.join('\n\n')}`;
 };
 
 /**
@@ -132,12 +135,12 @@ export const generateContextFromDocuments = ({
  * @param {string} params.query - The user's query
  * @param {Array<string>} params.namespaces - Array of namespaces to search in
  * @param {number} params.limit - Maximum number of results per namespace
- * @returns {Promise<string>} - Context string for the LLM
+ * @returns {Promise<Object>} - Object containing context string
  */
 export const getRAG = async ({ 
   query, 
   namespaces = [NAMESPACES.BOOK, NAMESPACES.DISCORD, NAMESPACES.LUMA, NAMESPACES.WIKI], 
-  limit = 5 
+  limit = 5
 }) => {
   try {
     // Create embedding for the query (only need to do this once)
@@ -145,7 +148,9 @@ export const getRAG = async ({
     
     if (!queryEmbedding) {
       console.error('Failed to create embedding for query');
-      return 'Error: Failed to create embedding for query.';
+      return { 
+        context: 'Error: Failed to create embedding for query.'
+      };
     }
     
     // Query each namespace in parallel
@@ -185,9 +190,13 @@ export const getRAG = async ({
       );
     
     // Join with double line breaks for better separation between namespace sections
-    return contextParts.join('\n\n\n');
+    return {
+      context: contextParts.join('\n\n\n')
+    };
   } catch (error) {
     console.error('Error getting context for query:', error);
-    return 'Error retrieving context information.';
+    return { 
+      context: 'Error retrieving context information.'
+    };
   }
 }; 
