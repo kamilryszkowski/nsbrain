@@ -26,15 +26,14 @@ async function runEvaluation(verbose = true) {
   const questions = getFlattenedQuestions();
   const results = [];
   
-  console.log(`Running evaluation on ${questions.length} questions across ${new Set(questions.map(q => q.category)).size} categories`);
+  console.log(`Running evaluation on ${questions.length} questions`);
   
   // Loop through each question
   for (let i = 0; i < questions.length; i++) {
-    const { category, question } = questions[i];
+    const { question } = questions[i];
     
     if (verbose) {
       console.log(`\n[${i + 1}/${questions.length}] Testing: ${question}`);
-      console.log(`Category: ${category}`);
     }
     
     try {
@@ -61,7 +60,6 @@ async function runEvaluation(verbose = true) {
       
       // Store result
       results.push({
-        category,
         question,
         answer,
         evaluation,
@@ -73,7 +71,6 @@ async function runEvaluation(verbose = true) {
       
       // Add failed entry to results
       results.push({
-        category,
         question,
         error: error.message,
         timestamp: new Date().toISOString()
@@ -92,11 +89,6 @@ async function runEvaluation(verbose = true) {
   
   if (stats.successfulEvaluations > 0) {
     console.log(`Average overall score: ${stats.average}/5`);
-    
-    console.log('\nCategory averages:');
-    Object.entries(stats.categoryAverages).forEach(([category, score]) => {
-      console.log(`- ${category}: ${score}/5`);
-    });
     
     console.log('\nCriteria averages:');
     console.log(`- Accuracy: ${stats.criteriaAverages.accuracy}/5`);

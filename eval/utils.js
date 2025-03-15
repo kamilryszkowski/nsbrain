@@ -46,7 +46,6 @@ function calculateStats(evaluations) {
   if (!evaluations.length) {
     return {
       average: 0,
-      categoryAverages: {},
       criteriaAverages: {
         accuracy: 0,
         relevance: 0,
@@ -62,7 +61,6 @@ function calculateStats(evaluations) {
     return {
       average: 0,
       successRate: 0,
-      categoryAverages: {},
       criteriaAverages: {
         accuracy: 0,
         relevance: 0,
@@ -77,22 +75,6 @@ function calculateStats(evaluations) {
   
   // Calculate success rate
   const successRate = validEvaluations.length / evaluations.length;
-
-  // Calculate averages by category
-  const categories = {};
-  validEvaluations.forEach(item => {
-    const category = item.category;
-    if (!categories[category]) {
-      categories[category] = { sum: 0, count: 0 };
-    }
-    categories[category].sum += item.evaluation.overall;
-    categories[category].count += 1;
-  });
-
-  const categoryAverages = Object.entries(categories).reduce((acc, [category, data]) => {
-    acc[category] = data.sum / data.count;
-    return acc;
-  }, {});
 
   // Calculate averages by criteria
   const criteria = { accuracy: 0, relevance: 0, quality: 0 };
@@ -113,10 +95,6 @@ function calculateStats(evaluations) {
     successRate: parseFloat(successRate.toFixed(2)),
     totalEvaluations: evaluations.length,
     successfulEvaluations: validEvaluations.length,
-    categoryAverages: Object.entries(categoryAverages).reduce((acc, [k, v]) => {
-      acc[k] = parseFloat(v.toFixed(2));
-      return acc;
-    }, {}),
     criteriaAverages: Object.entries(criteriaAverages).reduce((acc, [k, v]) => {
       acc[k] = parseFloat(v.toFixed(2));
       return acc;
