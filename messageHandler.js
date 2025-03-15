@@ -221,19 +221,25 @@ ${context}`;
     // Handle message with mentions
     handleMention: async (message, botId) => {
       try {
-        // Check if the message mentions the bot
-        const isMentioned = message.mentions && message.mentions.users && message.mentions.users.has(botId);
+        // Check if this is a reply to the bot's message
+        const isReplyToBot = message.reference?.messageId && 
+          message.channel.messages?.cache?.get(message.reference.messageId)?.author?.id === botId;
+
+        // Check if the message has a proper @ mention of the bot
+        const hasProperMention = message.mentions?.users?.has(botId);
         
-        if (!isMentioned) {
-          return; // Not mentioned, ignore the message
+        // Only proceed if it's either a reply to bot's message or has a proper @ mention
+        if (!isReplyToBot && !hasProperMention) {
+          return; // Not a proper mention or reply, ignore the message
         }
         
         // Extract the query by removing the mention
         // This regex removes all mentions from the message
         const query = message.content.replace(/<@!?(\d+)>/g, '').trim();
         
-        // Log the received mention
-        console.log(`${formatMessageInfo(message)} | Mention received: ${query}`);
+        // Log the received mention or reply
+        const interactionType = isReplyToBot ? 'Reply' : 'Mention';
+        console.log(`${formatMessageInfo(message)} | ${interactionType} received: ${query}`);
         
         if (!query) {
           await safeSendMessage(message, "Hello! Please ask me a question about Network School.");
