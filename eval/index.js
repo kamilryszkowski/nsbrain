@@ -54,7 +54,6 @@ async function runEvaluation(verbose = true) {
         console.log('\nEvaluation:');
         console.log(`Overall score: ${evaluation.overall}/5`);
         console.log(`Accuracy: ${evaluation.accuracy.score}/5`);
-        console.log(`Relevance: ${evaluation.relevance.score}/5`);
         console.log(`Quality: ${evaluation.quality.score}/5`);
       }
       
@@ -92,7 +91,6 @@ async function runEvaluation(verbose = true) {
     
     console.log('\nCriteria averages:');
     console.log(`- Accuracy: ${stats.criteriaAverages.accuracy}/5`);
-    console.log(`- Relevance: ${stats.criteriaAverages.relevance}/5`);
     console.log(`- Quality: ${stats.criteriaAverages.quality}/5`);
   } else {
     console.log('\nNo successful evaluations to calculate averages.');

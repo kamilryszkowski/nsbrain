@@ -40,15 +40,14 @@ You are an expert evaluator of LLM responses about the Network State project.
 You'll be given a question and an answer provided by an LLM system.
 
 Please evaluate the answer based on the following criteria:
-1. Accuracy (1-5): How factually accurate is the information provided?
-2. Relevance (1-5): How well does the answer address the specific question asked?
-3. Quality (1-5): How well-structured, clear, and comprehensive is the answer?
+1. Accuracy (1-5): Did the AI provide a direct answer to the question? Score 5 if the answer directly addresses the question with specific information, and 1 if it completely fails to provide a useful answer.
+2. Quality (1-5): How well-formatted, clear, and well-structured is the answer? This is about presentation, organization, and readability, not content. Score 5 for excellent formatting and structure, and 1 for poor formatting.
 
 For each criterion, provide:
 - A score from 1-5 (where 1 is poor and 5 is excellent)
 - A brief explanation of why you gave this score
 
-Finally, calculate an overall score as the average of the three scores, rounded to one decimal place.
+Finally, calculate an overall score as the average of the two scores, rounded to one decimal place.
 
 QUESTION: ${question}
 ANSWER: ${answer}
@@ -56,7 +55,6 @@ ANSWER: ${answer}
 Format your response as a JSON object with the following structure:
 {
   "accuracy": { "score": number, "reason": "string" },
-  "relevance": { "score": number, "reason": "string" },
   "quality": { "score": number, "reason": "string" },
   "overall": number,
   "feedback": "string"
@@ -66,9 +64,6 @@ Return ONLY the JSON object without any additional text, explanation, or markdow
 `;
 
   try {
-    // Use GPT-4o for evaluation
-    const defaultModel = models['GPT-4o'] || 'gpt-4o';
-    
     // Call the LLM with the evaluation prompt
     const evaluationResponse = await generateResponse(evaluationPrompt);
     
@@ -84,7 +79,7 @@ Return ONLY the JSON object without any additional text, explanation, or markdow
       evaluation = JSON.parse(jsonStr);
       
       // Validate the JSON structure
-      if (!evaluation.accuracy || !evaluation.relevance || !evaluation.quality || !evaluation.overall) {
+      if (!evaluation.accuracy || !evaluation.quality || !evaluation.overall) {
         throw new Error('Invalid evaluation structure');
       }
     } catch (error) {
@@ -94,7 +89,6 @@ Return ONLY the JSON object without any additional text, explanation, or markdow
       // Fallback evaluation if parsing fails
       evaluation = {
         accuracy: { score: 0, reason: 'Failed to parse evaluator response' },
-        relevance: { score: 0, reason: 'Failed to parse evaluator response' },
         quality: { score: 0, reason: 'Failed to parse evaluator response' },
         overall: 0,
         feedback: 'Evaluation failed due to parsing error'

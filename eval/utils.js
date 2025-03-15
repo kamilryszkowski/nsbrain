@@ -48,7 +48,6 @@ function calculateStats(evaluations) {
       average: 0,
       criteriaAverages: {
         accuracy: 0,
-        relevance: 0,
         quality: 0
       }
     };
@@ -63,7 +62,6 @@ function calculateStats(evaluations) {
       successRate: 0,
       criteriaAverages: {
         accuracy: 0,
-        relevance: 0,
         quality: 0
       }
     };
@@ -77,16 +75,14 @@ function calculateStats(evaluations) {
   const successRate = validEvaluations.length / evaluations.length;
 
   // Calculate averages by criteria
-  const criteria = { accuracy: 0, relevance: 0, quality: 0 };
+  const criteria = { accuracy: 0, quality: 0 };
   validEvaluations.forEach(item => {
     criteria.accuracy += item.evaluation.accuracy.score;
-    criteria.relevance += item.evaluation.relevance.score;
     criteria.quality += item.evaluation.quality.score;
   });
 
   const criteriaAverages = {
     accuracy: criteria.accuracy / validEvaluations.length,
-    relevance: criteria.relevance / validEvaluations.length,
     quality: criteria.quality / validEvaluations.length
   };
 
