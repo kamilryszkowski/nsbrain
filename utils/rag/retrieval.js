@@ -25,7 +25,7 @@ export const NAMESPACES = {
 export const queryVectors = async ({ 
   queryVector, 
   namespace = DEFAULT_NAMESPACE, 
-  limit = 5 
+  limit = 10
 }) => {
   try {
     const { data, error } = await supabase.rpc('match_documents', {
