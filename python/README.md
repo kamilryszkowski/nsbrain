@@ -15,6 +15,7 @@ A collection of scrapers to gather content from Network State related sources (L
 ```
 git clone <repository-url>
 cd nsbrain
+brew install just poetry
 just install
 ```
 

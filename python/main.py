@@ -46,29 +46,29 @@ def scrape_all(
         dfs['luma'] = pd.DataFrame(columns=['url', 'content'])
 
     # Run Book scraper
-    try:
-        print("\nScraping Network State book...")
-        dfs['book'] = scrape_book()
-        if save_individual:
-            output_path = RAW_DIR / f"book_{timestamp}.csv"
-            dfs['book'].to_csv(output_path, index=False)
-            print(f"Saved Book data to {output_path}")
-    except Exception as e:
-        print(f"Error scraping book: {e}")
-        dfs['book'] = pd.DataFrame(columns=['url', 'content'])
+    # try:
+    #     print("\nScraping Network State book...")
+    #     dfs['book'] = scrape_book()
+    #     if save_individual:
+    #         output_path = RAW_DIR / f"book_{timestamp}.csv"
+    #         dfs['book'].to_csv(output_path, index=False)
+    #         print(f"Saved Book data to {output_path}")
+    # except Exception as e:
+    #     print(f"Error scraping book: {e}")
+    #     dfs['book'] = pd.DataFrame(columns=['url', 'content'])
 
     # Run Notion scraper if URL provided
-    if notion_iframe_url:
-        try:
-            print("\nScraping Notion wiki...")
-            dfs['notion'] = scrape_notion(notion_iframe_url)
-            if save_individual:
-                output_path = RAW_DIR / f"notion_{timestamp}.csv"
-                dfs['notion'].to_csv(output_path, index=False)
-                print(f"Saved Notion data to {output_path}")
-        except Exception as e:
-            print(f"Error scraping Notion: {e}")
-            dfs['notion'] = pd.DataFrame(columns=['url', 'content'])
+    # if notion_iframe_url:
+    #     try:
+    #         print("\nScraping Notion wiki...")
+    #         dfs['notion'] = scrape_notion(notion_iframe_url)
+    #         if save_individual:
+    #             output_path = RAW_DIR / f"notion_{timestamp}.csv"
+    #             dfs['notion'].to_csv(output_path, index=False)
+    #             print(f"Saved Notion data to {output_path}")
+    #     except Exception as e:
+    #         print(f"Error scraping Notion: {e}")
+    #         dfs['notion'] = pd.DataFrame(columns=['url', 'content'])
 
     # Run Discord scraper if credentials provided
     if discord_server_id and discord_auth_token:
