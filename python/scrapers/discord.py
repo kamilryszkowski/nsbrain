@@ -32,12 +32,12 @@ class DiscordScraper:
         
         if response.status_code == 200:
             channels_data = response.json()
-            # Filter for text channels (type 0)
+            # Filter for text channels (type 0) and announcement channels (type 5)
             text_channels = [
                 {'id': c['id'], 'name': c['name']}
-                for c in channels_data if c['type'] == 0
+                for c in channels_data if c['type'] in [0, 5]
             ]
-            print(f"Found {len(text_channels)} text channels via API")
+            print(f"Found {len(text_channels)} text and announcement channels via API")
             return text_channels
         
         # If that fails, try alternate approach by getting visible channels
@@ -49,12 +49,12 @@ class DiscordScraper:
         
         if response.status_code == 200:
             channels_data = response.json()
-            # Filter for text channels
+            # Filter for text and announcement channels
             text_channels = [
                 {'id': c['id'], 'name': c.get('name', f'channel_{c["id"]}')}
-                for c in channels_data if c.get('type') == 0
+                for c in channels_data if c.get('type') in [0, 5]
             ]
-            print(f"Found {len(text_channels)} text channels via user's guild")
+            print(f"Found {len(text_channels)} text and announcement channels via user's guild")
             return text_channels
         
         # If both approaches fail, we need to explore the server in a browser-like way
