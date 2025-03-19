@@ -10,7 +10,6 @@ export const NAMESPACES = {
   DISCORD: 'discord',
   LUMA: 'luma',
   WIKI: 'wiki',
-  DEFAULT: DEFAULT_NAMESPACE
 };
 
 /**
@@ -27,6 +26,7 @@ export const queryVectors = async ({
   namespace = DEFAULT_NAMESPACE, 
   limit = 10
 }) => {
+
   try {
     const { data, error } = await supabase.rpc('match_documents', {
       query_vec: queryVector,
@@ -42,43 +42,6 @@ export const queryVectors = async ({
     return data || [];
   } catch (error) {
     console.error('Exception querying vectors:', error);
-    return [];
-  }
-};
-
-/**
- * Create an embedding for a text query and find relevant documents
- * 
- * @param {string} query - The text query to embed and search for
- * @param {string} namespace - Namespace to search in
- * @param {number} limit - Maximum number of results
- * @returns {Promise<Array>} - Array of relevant document contents
- */
-export const findRelevantDocuments = async (query, namespace = DEFAULT_NAMESPACE, limit = 5) => {
-  try {
-    // Create embedding for the query
-    const queryEmbedding = await createEmbedding({ text: query });
-    
-    if (!queryEmbedding) {
-      console.error('Failed to create embedding for query');
-      return [];
-    }
-    
-    // Query for similar documents
-    const matches = await queryVectors({
-      queryVector: queryEmbedding,
-      namespace,
-      limit
-    });
-    
-    // Extract and return the content from matches
-    return matches.map(match => ({
-      content: match.content,
-      similarity: match.similarity,
-      url: match.url
-    }));
-  } catch (error) {
-    console.error('Error finding relevant documents:', error);
     return [];
   }
 };
