@@ -1,47 +1,122 @@
-# Network School BRAIN
+# NSbrain - Network School Discord Bot
+
+A sophisticated Discord bot for the Network School community, powered by AI and RAG (Retrieval Augmented Generation) capabilities. The bot provides intelligent responses by combining LLM capabilities with a knowledge base of Network School-specific information.
 
 ## Overview
-The NS BRAIN Discord Bot is designed to streamline access to essential information for the Network School community. With a comprehensive database scraped from NS Wiki, Luma (events page), Discord channels (reception & Discussion) as its knowledge base, the bot leverages the OpenAI API to provide accurate, context-driven answers to queries posted on Discord. This makes it easier for new and existing members to ask questions related to everything going around at the Network School. 
 
-## Features
-- **Instant Answers:** Users receive prompt responses to their queries without leaving Discord.
-- **Deep Context Integration:** Combines a system prompt, wiki context from Notion, and user queries to generate relevant answers.
-- **OpenAI API Integration:** Uses the OpenAI API for processing queries and fetching precise responses.
+NSbrain is designed to:
+- Answer questions about Network School using context from various sources
+- Handle both direct messages and mentions in channels
+- Provide accurate responses with source citations
+- Scale across multiple data sources and knowledge bases
+
+## Project Structure
+
+```
+.
+├── data/               # Knowledge base data sources
+│   ├── book/          # Book content
+│   ├── discord/       # Discord message history
+│   ├── luma/          # Luma content
+│   └── wiki/          # Wiki content
+├── utils/
+│   ├── rag/           # RAG implementation
+│   └── ...            # Other utility modules
+├── scripts/           # Data upload and maintenance scripts
+├── eval/              # Evaluation tools
+├── python/            # Python utilities
+├── infer.js           # Core inference logic
+├── messageHandler.js  # Discord message processing
+├── init.js           # Bot initialization
+└── index.js          # Main entry point
+```
+
+## Core Components
+
+### RAG System
+The bot uses a sophisticated RAG system for knowledge retrieval. [Detailed documentation here](utils/rag/README.md).
+
+Key features:
+- Document processing and chunking
+- Vector storage using Supabase
+- Semantic search and retrieval
+- Multiple namespace support (Book, Discord, Luma, Wiki)
+
+### Message Handling
+- Supports both direct messages and channel mentions
+- Intelligent message processing and response generation
+- Built-in retry mechanisms and error handling
+- Typing indicators and message chunking for long responses
+
+### AI Integration
+- Primary model: Gemini 2.0 Flash
+- OpenAI integration as fallback
+- Context-aware responses with source attribution
+- Efficient prompt management
 
 ## Getting Started
 
-Join the test discord server: https://discord.gg/NZPtzKTh
+### Prerequisites
+- Node.js (Latest LTS version recommended)
+- A Discord bot token
+- API keys for Gemini and OpenAI
+- Supabase account and credentials
 
-### Querying the Bot:
-Use the designated command (/ask) followed by your question.
+### Environment Setup
 
-**Example Questions:**
+Create a `.env` file with the following variables:
+```
+DISCORD_TOKEN=your_discord_bot_token
+OPENAI_API_KEY=your_openai_api_key
+GEMINI_API_KEY=your_gemini_api_key
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
+```
 
-/ask how far is the coworking space from the hotel?
+### Installation
 
-/ask who at NS works in venture capital?
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the bot:
+   ```bash
+   npm start
+   ```
 
-/ask What events are scheduled at Network School this week?
+### Data Management
 
-/ask Who handles IT support for NS facilities?
+To upload new documents to the knowledge base:
+```bash
+npm run upload-docs
+```
 
-/ask can you write up a small digest of the highlights/lowlights of the week for NS? 
+## Available Scripts
 
-/ask this is my introduction, who do you think I should talk to at NS? + {paste your intro here} 
+- `npm start` - Start the Discord bot
+- `npm run upload-docs` - Upload documents to the knowledge base
+- `npm run eval` - Run evaluation tools
 
+## Dependencies
 
-## Contributing:
-Contributions are welcome! Please fork the repository and submit a pull request. For major changes, open an issue first to discuss what you would like to change.
+- `discord.js` - Discord API integration
+- `@google/generative-ai` - Gemini AI integration
+- `@supabase/supabase-js` - Vector database client
+- `openai` - OpenAI API integration
+- Additional utilities for CSV parsing and HTTP requests
 
-## Roadmap
-- Automatic Sync: Integrate with the Discord, Luma and NS Wiki for real-time updates.
-- Personalized space for inference : UI to interact with NS Brain and a space to personalize it.    
-- Admin Tools: Includes commands for updating and syncing the wiki data to ensure accuracy.
-- Fallback Mechanism: Provides instructions for manual lookup if the API fails or returns no results.
-- Private Conversations - enable the NS Brain BOT for private DMs.
-- Network State Ideology - Build the NS Brain BOTs personality based on the ideology of the Network State.  
+## Contributing
+
+When contributing to this repository, please:
+- Follow the existing code style
+- Update documentation as needed
+- Test your changes thoroughly
+- Use ES6+ syntax
+- Maintain compatibility with existing data structures
 
 ## License
-This project is licensed under the MIT License.
+
+[Add your license information here]
 
 
