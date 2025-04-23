@@ -1,6 +1,6 @@
 # NSbrain - Network School Discord Bot
 
-A sophisticated Discord bot for the Network School community, powered by AI and RAG (Retrieval Augmented Generation) capabilities. The bot provides intelligent responses by combining LLM capabilities with a knowledge base of Network School-specific information.
+A Discord bot for the Network School community, powered by AI and RAG (Retrieval Augmented Generation) capabilities. The bot provides intelligent responses by combining LLM capabilities with a knowledge base of Network School-specific information.
 
 ## Overview
 
