@@ -34,7 +34,7 @@ NSbrain is designed to:
 ## Core Components
 
 ### RAG System
-The bot uses a sophisticated RAG system for knowledge retrieval. [Detailed documentation here](utils/rag/README.md).
+The bot uses a RAG system for knowledge retrieval.
 
 Key features:
 - Document processing and chunking
